@@ -1,0 +1,6 @@
+{
+  "name": "Hirbit Store - Inventory & POS Management",
+  "description": "Retail inventory and POS management system with role-based access control for Administrators, Store Managers, and Sales Associates, featuring real-time POS, inventory tracking, variant control, and financial analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

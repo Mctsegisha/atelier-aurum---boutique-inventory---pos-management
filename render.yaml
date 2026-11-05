@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: hirbit-store-backend
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DATABASE_URL
+        sync: false # Set in Render Dashboard from Neon PostgreSQL connection string
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        sync: false # Set to your Vercel frontend URL, e.g. https://hirbit-store.vercel.app
+      - key: DEMO_MODE
+        value: "true"
+
