@@ -105,7 +105,7 @@ export const products = pgTable('products', {
   purchasePrice: doublePrecision('purchase_price').notNull().default(0),
   sellingPrice: doublePrecision('selling_price').notNull().default(0),
   wholesalePrice: doublePrecision('wholesale_price').default(0),
-  taxRate: doublePrecision('tax_rate').default(0.08),
+  taxRate: doublePrecision('tax_rate').default(0.15),
   minStockLevel: integer('min_stock_level').notNull().default(5),
   imageUrl: text('image_url'),
   status: text('status').notNull().default('active'), // active, archived, draft
@@ -194,7 +194,7 @@ export const sales = pgTable('sales', {
   subtotal: doublePrecision('subtotal').notNull(),
   discountAmount: doublePrecision('discount_amount').default(0),
   discountType: text('discount_type').default('fixed'),
-  taxRate: doublePrecision('tax_rate').default(0.08),
+  taxRate: doublePrecision('tax_rate').default(0.15),
   taxAmount: doublePrecision('tax_amount').default(0),
   totalAmount: doublePrecision('total_amount').notNull(),
   paymentStatus: text('payment_status').notNull().default('completed'), // 'completed', 'refunded', 'partial_refund'

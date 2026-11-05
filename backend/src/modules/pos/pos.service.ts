@@ -168,6 +168,7 @@ export class PosService {
         receipt_number: result.receiptNumber,
         subtotal: subtotalCents / 100,
         discount_amount: discountCents / 100,
+        tax_rate,
         tax_amount: taxCents / 100,
         total_amount: result.totalAmount,
         payment_method: input.payment_method,

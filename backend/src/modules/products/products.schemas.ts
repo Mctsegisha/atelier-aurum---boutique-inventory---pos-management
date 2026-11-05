@@ -11,7 +11,7 @@ export const createProductSchema = {
     purchase_price: z.coerce.number().min(0).default(0),
     selling_price: z.coerce.number().min(0).default(0),
     wholesale_price: z.coerce.number().min(0).default(0),
-    tax_rate: z.coerce.number().min(0).max(1).default(0.08),
+    tax_rate: z.coerce.number().min(0).max(1).default(0.15),
     min_stock_level: z.coerce.number().int().min(0).default(5),
     image_url: z.string().optional().nullable(),
     is_simple: z.coerce.number().int().min(0).max(1).default(0),

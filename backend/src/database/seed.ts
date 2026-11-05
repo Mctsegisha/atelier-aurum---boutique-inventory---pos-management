@@ -189,7 +189,7 @@ function seedExpandedBoutiqueProducts() {
       'saint-honore-satin-pointed-pumps',
       'Handcrafted Italian silk-satin stilettos with 105mm lacquered heel, padded kidskin insole, and brushed leather sole.',
       catId, subId, 'b_honore', 's_florence',
-      210.0, 520.0, 390.0, 0.08, 4,
+      210.0, 520.0, 390.0, 0.15, 4,
       'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&auto=format&fit=crop&q=80',
       0, 'Autumn/Winter 2026', 'Soirée Collection', 'Women', 'Silk Satin Upper, Kidskin Lining',
       JSON.stringify({ upper_material: 'Silk Satin', heel_height: '105mm Stiletto', sole: 'Brushed Italian Leather', target_gender: 'Women' })
@@ -220,7 +220,7 @@ function seedExpandedBoutiqueProducts() {
       'rose-de-grasse-extrait-de-parfum',
       'Master perfumer formulation centering Centifolia rose petals harvested at dawn in Grasse, anchored with Mysore sandalwood and ambergris.',
       catId, subId, 'b_valmont', 's_lyon',
-      95.0, 260.0, 195.0, 0.08, 5,
+      95.0, 260.0, 195.0, 0.15, 5,
       'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=600&auto=format&fit=crop&q=80',
       0, 'Permanent Collection', 'Haute Parfumerie', 'Unisex', 'Alcohol, Fragrance Parfum, Essential Oils',
       JSON.stringify({ fragrance_family: 'Floral Oriental', concentration: 'Extrait de Parfum (30%)', net_volume: '50ml - 100ml', origin: 'Grasse, France' })
@@ -249,7 +249,7 @@ function seedExpandedBoutiqueProducts() {
       'hirbit-18k-diamond-solitaire-ring',
       'GIA-certified 1.2 carat brilliant-cut solitaire diamond set in solid 18-karat recycled yellow gold with micro-pave diamond band gallery.',
       catId, subId, 'b_aurum', 's_milano',
-      980.0, 2400.0, 1800.0, 0.08, 2,
+      980.0, 2400.0, 1800.0, 0.15, 2,
       'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&auto=format&fit=crop&q=80',
       0, 'Permanent Haute Joaillerie', 'L’Infini', 'Women', 'Solid 18K Gold, VVS1 Diamond',
       JSON.stringify({ metal_type: '18K Yellow Gold (750)', stone: '1.2ct Diamond (VS1 / F Color)', karat: '18K', certification: 'GIA Certified' })

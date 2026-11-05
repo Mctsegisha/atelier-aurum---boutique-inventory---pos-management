@@ -26,8 +26,8 @@ export function SettingsView() {
   const [phone, setPhone] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [address, setAddress] = useState<string>('');
-  const [currencySymbol, setCurrencySymbol] = useState<string>('$');
-  const [taxRate, setTaxRate] = useState<number>(0.08);
+  const [currencySymbol, setCurrencySymbol] = useState<string>('ETB');
+  const [taxRate, setTaxRate] = useState<number>(0.15);
   const [lowStockThreshold, setLowStockThreshold] = useState<number>(5);
   const [receiptHeader, setReceiptHeader] = useState<string>('');
   const [receiptFooter, setReceiptFooter] = useState<string>('');

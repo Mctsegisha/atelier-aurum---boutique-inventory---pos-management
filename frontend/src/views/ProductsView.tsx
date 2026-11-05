@@ -78,7 +78,7 @@ export function ProductsView() {
   const [formPurchasePrice, setFormPurchasePrice] = useState<number>(100);
   const [formSellingPrice, setFormSellingPrice] = useState<number>(250);
   const [formWholesalePrice, setFormWholesalePrice] = useState<number>(180);
-  const [formTaxRate, setFormTaxRate] = useState<number>(0.08);
+  const [formTaxRate, setFormTaxRate] = useState<number>(0.15);
   const [formMinStock, setFormMinStock] = useState<number>(3);
   const [formImageUrl, setFormImageUrl] = useState<string>('');
   const [formStatus, setFormStatus] = useState<'active' | 'archived' | 'draft' | 'pending_approval' | 'rejected'>('active');
@@ -203,7 +203,7 @@ export function ProductsView() {
     setFormPurchasePrice(120);
     setFormSellingPrice(295);
     setFormWholesalePrice(210);
-    setFormTaxRate(0.08);
+    setFormTaxRate(0.15);
     setFormMinStock(3);
     setFormImageUrl(BOUTIQUE_CATEGORIES_CONFIG[0]?.sampleImages[0]?.url || '');
     setFormStatus('active');
@@ -227,7 +227,7 @@ export function ProductsView() {
     setFormPurchasePrice(Number(product.purchase_price) || 0);
     setFormSellingPrice(Number(product.selling_price) || 0);
     setFormWholesalePrice(Number(product.wholesale_price) || 0);
-    setFormTaxRate(product.tax_rate !== undefined ? Number(product.tax_rate) : 0.08);
+    setFormTaxRate(product.tax_rate !== undefined && product.tax_rate !== null ? Number(product.tax_rate) : 0.15);
     setFormMinStock(product.min_stock_level || 3);
     setFormImageUrl(product.image_url || '');
     setFormStatus(product.status || 'active');

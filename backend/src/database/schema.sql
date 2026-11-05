@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS products (
   purchase_price REAL NOT NULL DEFAULT 0.0,
   selling_price REAL NOT NULL DEFAULT 0.0,
   wholesale_price REAL DEFAULT 0.0,
-  tax_rate REAL DEFAULT 0.08,
+  tax_rate REAL DEFAULT 0.15,
   min_stock_level INTEGER NOT NULL DEFAULT 5,
   image_url TEXT,
   status TEXT NOT NULL DEFAULT 'active', -- active, archived, draft
@@ -197,7 +197,7 @@ CREATE TABLE IF NOT EXISTS sales (
   subtotal REAL NOT NULL,
   discount_amount REAL DEFAULT 0.0,
   discount_type TEXT DEFAULT 'fixed',
-  tax_rate REAL DEFAULT 0.08,
+  tax_rate REAL DEFAULT 0.15,
   tax_amount REAL DEFAULT 0.0,
   total_amount REAL NOT NULL,
   payment_status TEXT NOT NULL DEFAULT 'completed', -- 'completed', 'refunded', 'partial_refund'
@@ -361,7 +361,7 @@ CREATE TABLE IF NOT EXISTS business_settings (
   address TEXT,
   currency_code TEXT DEFAULT 'ETB',
   currency_symbol TEXT DEFAULT 'ETB',
-  tax_rate REAL DEFAULT 0.08,
+  tax_rate REAL DEFAULT 0.15,
   low_stock_threshold INTEGER DEFAULT 5,
   receipt_header TEXT,
   receipt_footer TEXT,

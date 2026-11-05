@@ -47,6 +47,7 @@ export function PosView() {
 
   // Cart State
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [taxRate, setTaxRate] = useState<number>(0.15); // Standard 15% Ethiopian VAT
   const [discountAmount, setDiscountAmount] = useState<number>(0);
   const [discountType, setDiscountType] = useState<'fixed' | 'percentage'>('fixed');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -72,7 +73,22 @@ export function PosView() {
   useEffect(() => {
     loadCatalog();
     loadCustomers();
+    loadStoreSettings();
   }, []);
+
+  const loadStoreSettings = async () => {
+    try {
+      const s = await api.getSettings();
+      if (s && s.tax_rate !== undefined && s.tax_rate !== null) {
+        const rate = Number(s.tax_rate);
+        if (!isNaN(rate) && rate >= 0) {
+          setTaxRate(rate);
+        }
+      }
+    } catch {
+      // Default to 15% VAT
+    }
+  };
 
   const loadCatalog = async () => {
     setIsLoading(true);
@@ -201,7 +217,6 @@ export function PosView() {
   }
 
   const taxableAmount = Math.max(0, subtotal - calculatedDiscount);
-  const taxRate = 0.08; // 8% Boutique Luxury Tax
   const taxAmount = Math.round(taxableAmount * taxRate * 100) / 100;
   const grandTotal = Math.round((taxableAmount + taxAmount) * 100) / 100;
 
@@ -607,7 +622,7 @@ export function PosView() {
               </div>
             )}
             <div className="flex justify-between">
-              <span>Tax (VAT 15%)</span>
+              <span>Tax (VAT {Math.round(taxRate * 100)}%)</span>
               <span className="tabular-nums font-medium text-[#1A1A1A]">{formatCurrency(taxAmount)}</span>
             </div>
             <div className="flex justify-between text-base font-serif font-bold text-[#1A1A1A] pt-2 border-t border-[#E5E0D8]">
@@ -956,7 +971,7 @@ export function PosView() {
                   </div>
                 )}
                 <div className="flex justify-between text-[#716D66]">
-                  <span>Tax (15%):</span>
+                  <span>Tax ({Math.round(Number(completedReceipt.tax_rate ?? taxRate) * 100)}%):</span>
                   <span className="tabular-nums">{formatCurrency(completedReceipt.tax_amount)}</span>
                 </div>
                 <div className="flex justify-between font-serif text-lg font-bold text-[#1A1A1A] pt-1 border-t border-[#E5E0D8]">

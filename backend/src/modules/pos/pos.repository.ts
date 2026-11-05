@@ -24,7 +24,7 @@ export class PosRepository {
   public getBusinessSettings(): { tax_rate: number; allow_negative_inventory: boolean } {
     const settings = db.prepare('SELECT tax_rate, allow_negative_inventory FROM business_settings LIMIT 1').get() as any;
     return {
-      tax_rate: settings ? Number(settings.tax_rate) : 0.08,
+      tax_rate: settings && settings.tax_rate !== null && settings.tax_rate !== undefined ? Number(settings.tax_rate) : 0.15,
       allow_negative_inventory: settings ? Boolean(settings.allow_negative_inventory) : false
     };
   }
