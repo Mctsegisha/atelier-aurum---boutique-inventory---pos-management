@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.tsx';
 import { api } from '../api.ts';
+import { formatCurrency } from '../lib/currency.ts';
 import {
   TrendingUp,
-  DollarSign,
   Package,
   AlertTriangle,
   ShoppingBag,
@@ -36,19 +36,27 @@ interface DashboardViewProps {
 export function DashboardView({ onNavigate }: DashboardViewProps) {
   const { user, role } = useAuth();
   const [period, setPeriod] = useState<string>('30d');
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchDashboardData();
-  }, [period, role]);
+    if (period === 'custom') {
+      if (startDate && endDate) {
+        fetchDashboardData();
+      }
+    } else {
+      fetchDashboardData();
+    }
+  }, [period, startDate, endDate, role]);
 
   const fetchDashboardData = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await api.getDashboardReports(period);
+      const res = await api.getDashboardReports(period, startDate || undefined, endDate || undefined);
       setData(res);
     } catch (err: any) {
       setError(err.message || 'Failed to load dashboard data');
@@ -57,13 +65,24 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
     }
   };
 
-  const formatCurrency = (val: number | null | undefined) => {
-    if (val === null || val === undefined) return '—';
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0
-    }).format(val);
+  const handleSelectPreset = (pId: string) => {
+    setStartDate('');
+    setEndDate('');
+    setPeriod(pId);
+  };
+
+  const handleStartDateChange = (val: string) => {
+    setStartDate(val);
+    if (val && endDate) {
+      setPeriod('custom');
+    }
+  };
+
+  const handleEndDateChange = (val: string) => {
+    setEndDate(val);
+    if (startDate && val) {
+      setPeriod('custom');
+    }
   };
 
   const PIE_COLORS = ['#B89B65', '#2C2B29', '#8C8275', '#D4AF37', '#6A5ACD'];
@@ -102,28 +121,49 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
           </div>
         </div>
 
-        {/* Period Selector Tabs (Zero-Pill interactive control) */}
+        {/* Period Selector Tabs & Custom Date Range Filter */}
         {role !== 'sales' && (
-          <div className="flex items-center gap-1 p-1 bg-[#EFECE6] rounded-lg border border-[#E5E0D8] self-start md:self-end">
-            {[
-              { id: 'today', label: 'Today' },
-              { id: 'yesterday', label: 'Yesterday' },
-              { id: '7d', label: 'Last 7 Days' },
-              { id: '30d', label: 'Last 30 Days' },
-              { id: 'month', label: 'This Month' }
-            ].map(p => (
-              <button
-                key={p.id}
-                onClick={() => setPeriod(p.id)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap cursor-pointer ${
-                  period === p.id
-                    ? 'bg-white text-[#1A1A1A] shadow-xs'
-                    : 'text-[#59554F] hover:text-[#1A1A1A]'
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 self-start md:self-end">
+            {/* Presets: Today, Yesterday, Last 7 Days, Last 30 Days (Removed 'This Month') */}
+            <div className="flex items-center gap-1 p-1 bg-[#EFECE6] rounded-lg border border-[#E5E0D8]">
+              {[
+                { id: 'today', label: 'Today' },
+                { id: 'yesterday', label: 'Yesterday' },
+                { id: '7d', label: 'Last 7 Days' },
+                { id: '30d', label: 'Last 30 Days' }
+              ].map(p => (
+                <button
+                  key={p.id}
+                  onClick={() => handleSelectPreset(p.id)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap cursor-pointer ${
+                    period === p.id
+                      ? 'bg-white text-[#1A1A1A] shadow-xs'
+                      : 'text-[#59554F] hover:text-[#1A1A1A]'
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Custom Date Range Filter (mm/dd/yyyy to mm/dd/yyyy) */}
+            <div className="flex items-center gap-2">
+              <input
+                type="date"
+                value={startDate}
+                onChange={e => handleStartDateChange(e.target.value)}
+                className="px-2.5 py-1.5 text-xs bg-white border border-[#E5E0D8] rounded-md text-[#1A1A1A] focus:outline-none focus:border-[#B89B65] shadow-xs cursor-pointer"
+                title="Start Date"
+              />
+              <span className="text-xs text-[#716D66] font-normal">to</span>
+              <input
+                type="date"
+                value={endDate}
+                onChange={e => handleEndDateChange(e.target.value)}
+                className="px-2.5 py-1.5 text-xs bg-white border border-[#E5E0D8] rounded-md text-[#1A1A1A] focus:outline-none focus:border-[#B89B65] shadow-xs cursor-pointer"
+                title="End Date"
+              />
+            </div>
           </div>
         )}
       </div>
@@ -140,7 +180,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
         <div className="p-5 bg-white rounded-xl border border-[#E5E0D8] shadow-xs">
           <div className="flex items-center justify-between text-[#716D66]">
             <span className="text-xs uppercase tracking-wider font-medium">Total Revenue</span>
-            <DollarSign className="w-4 h-4 text-[#B89B65]" />
+            <span className="text-xs font-bold font-mono text-[#B89B65] tracking-wider">ETB</span>
           </div>
           <div className="text-2xl lg:text-3xl font-serif font-semibold text-[#1A1A1A] mt-2 tabular-nums">
             {formatCurrency(stats.total_revenue)}
