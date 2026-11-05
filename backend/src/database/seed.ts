@@ -377,11 +377,40 @@ export function ensureBrandsAndSuppliers() {
   }
 }
 
+export function ensureDefaultCredentials() {
+  const salt = bcrypt.genSaltSync(10);
+  const adminHash = bcrypt.hashSync('admin123456', salt);
+  const storePersonHash = bcrypt.hashSync('manager123456', salt);
+  const salesHash = bcrypt.hashSync('cashier123456', salt);
+
+  const upsertUser = db.prepare(`
+    INSERT INTO profiles (id, username, email, password_hash, full_name, role, is_active, phone, avatar_url)
+    VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)
+    ON CONFLICT (id) DO UPDATE SET
+      username = EXCLUDED.username,
+      email = EXCLUDED.email,
+      password_hash = EXCLUDED.password_hash,
+      role = EXCLUDED.role,
+      is_active = 1,
+      phone = EXCLUDED.phone
+  `);
+
+  try {
+    upsertUser.run('u_admin', 'vivienne_owner', 'admin@hirbitstore.com', adminHash, 'Vivienne Laurent', 'admin', '+251 91 123 4567', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80');
+    upsertUser.run('u_manager', 'julian_store', 'storeperson@hirbitstore.com', storePersonHash, 'Julian Vance', 'store_person', '+251 91 123 4568', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80');
+    upsertUser.run('u_cashier', 'camille_sales', 'sales@hirbitstore.com', salesHash, 'Camille Moreau', 'sales', '+251 91 123 4569', 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80');
+    console.log('[Seed] Verified default staff credentials (admin, store manager, sales associate).');
+  } catch (err) {
+    console.error('[Seed] Error ensuring credentials:', err);
+  }
+}
+
 export function seedDatabase() {
-  // Always guarantee brands, suppliers, categories and subcategories are loaded
+  // Always guarantee brands, suppliers, categories, subcategories and credentials are loaded
   try {
     ensureBrandsAndSuppliers();
     ensureCategoriesAndSubcategories();
+    ensureDefaultCredentials();
   } catch (err) {
     console.error('[Category Seed Error]:', err);
   }
