@@ -270,6 +270,67 @@ export class ReportsRepository {
       total_amount: Math.round(Number(r.total_amount || 0) * 100) / 100
     }));
   }
+
+  /**
+   * Total Item Price: sum of (unit_price × quantity) across all sale_items in the period,
+   * i.e. the gross merchandise value before discounts, tax, or refunds.
+   */
+  public getTotalItemsPrice(dateClause: DateFilterClause) {
+    const sql = `
+      SELECT COALESCE(SUM(si.unit_price * si.quantity), 0) as total_items_price,
+             COALESCE(SUM(si.quantity), 0) as total_items_sold
+      FROM sale_items si
+      JOIN sales s ON si.sale_id = s.id
+      WHERE ${dateClause.sql} AND s.payment_status != 'refunded'
+    `;
+    const row = db.prepare(sql).get(...dateClause.params) as any;
+    return {
+      total_items_price: Math.round(Number(row?.total_items_price || 0) * 100) / 100,
+      total_items_sold: Number(row?.total_items_sold || 0)
+    };
+  }
+
+  /**
+   * Slow-Moving Stock: products whose variants have stock above zero
+   * but zero sales in the last 60 days. Limited to top 8 by stock quantity.
+   */
+  public getSlowMovingStock() {
+    const sql = `
+      SELECT
+        p.id as product_id,
+        p.name as product_name,
+        p.image_url,
+        COALESCE(c.name, 'Uncategorized') as category,
+        SUM(inv.quantity) as stock_quantity,
+        COALESCE(p.selling_price, 0) as selling_price
+      FROM products p
+      JOIN product_variants pv ON pv.product_id = p.id
+      JOIN inventory inv ON inv.variant_id = pv.id
+      LEFT JOIN categories c ON p.category_id = c.id
+      WHERE p.status = 'active'
+        AND inv.quantity > 0
+        AND p.id NOT IN (
+          SELECT DISTINCT pv2.product_id
+          FROM sale_items si
+          JOIN sales s ON si.sale_id = s.id
+          JOIN product_variants pv2 ON si.variant_id = pv2.id
+          WHERE s.created_at >= NOW() - INTERVAL '60 days'
+            AND s.payment_status != 'refunded'
+        )
+      GROUP BY p.id, p.name, p.image_url, c.name, p.selling_price
+      ORDER BY stock_quantity DESC
+      LIMIT 8
+    `;
+    const rows = db.prepare(sql).all() as any[];
+    return rows.map(r => ({
+      product_id: r.product_id,
+      product_name: r.product_name,
+      image_url: r.image_url,
+      category: r.category,
+      stock_quantity: Number(r.stock_quantity || 0),
+      selling_price: Math.round(Number(r.selling_price || 0) * 100) / 100
+    }));
+  }
 }
 
 export const reportsRepository = new ReportsRepository();

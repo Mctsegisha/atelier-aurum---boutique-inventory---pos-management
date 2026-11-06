@@ -12,7 +12,8 @@ import {
   Sparkles,
   Users,
   ChevronRight,
-  Clock
+  Clock,
+  Tag
 } from 'lucide-react';
 import {
   AreaChart,
@@ -190,17 +191,23 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
           </div>
         </div>
 
-        {/* Net Sales */}
+        {/* Total Item Price (Store Manager) | Net Sales (Admin / Sales) */}
         <div className="p-5 bg-white rounded-xl border border-[#E5E0D8] shadow-xs">
           <div className="flex items-center justify-between text-[#716D66]">
-            <span className="text-xs uppercase tracking-wider font-medium">Net Sales</span>
+            <span className="text-xs uppercase tracking-wider font-medium">
+              {role === 'store_person' ? 'Total Item Price' : 'Net Sales'}
+            </span>
             <TrendingUp className="w-4 h-4 text-[#B89B65]" />
           </div>
           <div className="text-2xl lg:text-3xl font-serif font-semibold text-[#1A1A1A] mt-2 tabular-nums">
-            {formatCurrency(stats.net_sales)}
+            {role === 'store_person'
+              ? formatCurrency(stats.total_items_price)
+              : formatCurrency(stats.net_sales)}
           </div>
           <div className="text-[11px] text-[#716D66] mt-1">
-            After {formatCurrency(stats.total_refunds)} refunds
+            {role === 'store_person'
+              ? `${stats.total_items_sold || 0} items sold (before discounts & tax)`
+              : `After ${formatCurrency(stats.total_refunds)} refunds`}
           </div>
         </div>
 
@@ -503,6 +510,78 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
           </div>
         </div>
       </div>
+
+      {/* SLOW-MOVING STOCK PANEL (Store Manager & Admin) */}
+      {role !== 'sales' && (
+        <div className="p-6 bg-white rounded-xl border border-[#E5E0D8] shadow-xs space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-serif font-semibold text-[#1A1A1A]">Slow-Moving Stock</h3>
+              <p className="text-xs text-[#716D66]">Products with available stock but no sales in the last 60 days</p>
+            </div>
+            <button
+              onClick={() => onNavigate('inventory')}
+              className="text-xs text-[#B89B65] hover:underline cursor-pointer"
+            >
+              View Inventory
+            </button>
+          </div>
+
+          {charts.slow_moving_stock && charts.slow_moving_stock.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-[#F0EDE8]">
+                    <th className="pb-2 text-left font-medium text-[#716D66] uppercase tracking-wider">Product</th>
+                    <th className="pb-2 text-left font-medium text-[#716D66] uppercase tracking-wider">Category</th>
+                    <th className="pb-2 text-right font-medium text-[#716D66] uppercase tracking-wider">In Stock</th>
+                    <th className="pb-2 text-right font-medium text-[#716D66] uppercase tracking-wider">Unit Price</th>
+                    <th className="pb-2 text-right font-medium text-[#716D66] uppercase tracking-wider">Stock Value</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#F0EDE8]">
+                  {charts.slow_moving_stock.map((item: any, idx: number) => (
+                    <tr key={idx} className="hover:bg-[#FAFAF8] transition-colors">
+                      <td className="py-3 pr-4">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-md bg-[#F0EDE8] overflow-hidden shrink-0 border border-[#E5E0D8]">
+                            {item.image_url ? (
+                              <img src={item.image_url} alt={item.product_name} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <ShoppingBag className="w-3.5 h-3.5 text-[#B89B65]" />
+                              </div>
+                            )}
+                          </div>
+                          <span className="font-medium text-[#1A1A1A] truncate max-w-[180px]">{item.product_name}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 pr-4 text-[#716D66]">{item.category}</td>
+                      <td className="py-3 pr-4 text-right">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 font-semibold border border-amber-200">
+                          {item.stock_quantity} units
+                        </span>
+                      </td>
+                      <td className="py-3 pr-4 text-right text-[#1A1A1A] tabular-nums">
+                        {formatCurrency(item.selling_price)}
+                      </td>
+                      <td className="py-3 text-right font-semibold text-[#1A1A1A] tabular-nums">
+                        {formatCurrency(item.selling_price * item.stock_quantity)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <Package className="w-10 h-10 text-[#D8D2C7] mb-3" />
+              <p className="text-sm font-medium text-[#1A1A1A]">All stocked items are moving</p>
+              <p className="text-xs text-[#716D66] mt-1">No products with zero sales in the last 60 days.</p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

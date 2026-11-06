@@ -40,6 +40,10 @@ export class ReportsService {
     const salesOverTime = this.repo.getSalesOverTime(dateClause);
     const recentSales = this.repo.getRecentSales(8);
 
+    // 5. Total Items Price & Slow-Moving Stock
+    const totalItemsData = this.repo.getTotalItemsPrice(dateClause);
+    const slowMovingStock = this.repo.getSlowMovingStock();
+
     // Standardized KPI metrics matching DashboardView & ReportsView expectations
     const stats = {
       total_revenue: salesSummary.total_revenue,
@@ -48,6 +52,8 @@ export class ReportsService {
       total_tax: salesSummary.total_tax,
       total_refunds: salesSummary.total_refunds,
       net_sales: netSales,
+      total_items_price: totalItemsData.total_items_price,
+      total_items_sold: totalItemsData.total_items_sold,
       cogs: totalCogs,
       gross_profit: grossProfit,
       gross_margin_percent: grossMarginPercent,
@@ -87,7 +93,8 @@ export class ReportsService {
         role: s.role,
         transactions_count: s.total_transactions,
         total_generated: s.total_revenue
-      }))
+      })),
+      slow_moving_stock: slowMovingStock
     };
 
     // Sales role specific context
