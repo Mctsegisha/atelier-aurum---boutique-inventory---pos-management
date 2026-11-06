@@ -108,6 +108,7 @@ CREATE TABLE IF NOT EXISTS products (
   wholesale_price REAL DEFAULT 0.0,
   tax_rate REAL DEFAULT 0.15,
   min_stock_level INTEGER NOT NULL DEFAULT 5,
+  dead_stock_days INTEGER NOT NULL DEFAULT 60,
   image_url TEXT,
   status TEXT NOT NULL DEFAULT 'active', -- active, archived, draft
   is_simple INTEGER NOT NULL DEFAULT 0, -- 1 = simple product, 0 = has variants

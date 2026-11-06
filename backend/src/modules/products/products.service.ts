@@ -103,6 +103,7 @@ export class ProductsService {
       wholesale_price = 0,
       tax_rate = 0.15,
       min_stock_level = 5,
+      dead_stock_days = 60,
       image_url,
       is_simple = 0,
       season,
@@ -129,10 +130,10 @@ export class ProductsService {
       db.prepare(`
         INSERT INTO products (
           id, name, slug, description, category_id, subcategory_id, brand_id, supplier_id,
-          purchase_price, selling_price, wholesale_price, tax_rate, min_stock_level,
+          purchase_price, selling_price, wholesale_price, tax_rate, min_stock_level, dead_stock_days,
           image_url, status, is_simple, season, collection, gender, material, attributes,
           created_by, approved_by, approved_at, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       `).run(
         productId,
         name.trim(),
@@ -147,6 +148,7 @@ export class ProductsService {
         Number(wholesale_price) || 0,
         Number(tax_rate) !== undefined && !isNaN(Number(tax_rate)) ? Number(tax_rate) : 0.15,
         Number(min_stock_level) || 5,
+        Number(dead_stock_days) || 60,
         image_url || null,
         initialStatus,
         Number(is_simple) ? 1 : 0,
@@ -312,6 +314,7 @@ export class ProductsService {
       wholesale_price = existing.wholesale_price,
       tax_rate = existing.tax_rate,
       min_stock_level = existing.min_stock_level,
+      dead_stock_days = existing.dead_stock_days ?? 60,
       image_url = existing.image_url,
       status = existing.status,
       is_simple = existing.is_simple,
@@ -328,7 +331,7 @@ export class ProductsService {
       UPDATE products SET
         name = ?, description = ?, category_id = ?, subcategory_id = ?, brand_id = ?,
         supplier_id = ?, purchase_price = ?, selling_price = ?, wholesale_price = ?,
-        tax_rate = ?, min_stock_level = ?, image_url = ?, status = ?, is_simple = ?,
+        tax_rate = ?, min_stock_level = ?, dead_stock_days = ?, image_url = ?, status = ?, is_simple = ?,
         season = ?, collection = ?, gender = ?, material = ?, attributes = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).run(
@@ -343,6 +346,7 @@ export class ProductsService {
       Number(wholesale_price),
       Number(tax_rate),
       Number(min_stock_level),
+      Number(dead_stock_days) || 60,
       image_url || null,
       status,
       Number(is_simple) ? 1 : 0,

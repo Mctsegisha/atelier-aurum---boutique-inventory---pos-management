@@ -20,6 +20,7 @@ import {
   Check,
   Download,
   AlertCircle,
+  AlertTriangle,
   Layers,
   Sparkles,
   ChevronDown,
@@ -80,6 +81,7 @@ export function ProductsView() {
   const [formWholesalePrice, setFormWholesalePrice] = useState<number>(180);
   const [formTaxRate, setFormTaxRate] = useState<number>(0.15);
   const [formMinStock, setFormMinStock] = useState<number>(3);
+  const [formDeadStockDays, setFormDeadStockDays] = useState<number>(60);
   const [formImageUrl, setFormImageUrl] = useState<string>('');
   const [formStatus, setFormStatus] = useState<'active' | 'archived' | 'draft' | 'pending_approval' | 'rejected'>('active');
   const [pendingCount, setPendingCount] = useState<number>(0);
@@ -206,6 +208,7 @@ export function ProductsView() {
     setFormWholesalePrice(210);
     setFormTaxRate(0.15);
     setFormMinStock(3);
+    setFormDeadStockDays(60);
     setFormImageUrl(BOUTIQUE_CATEGORIES_CONFIG[0]?.sampleImages[0]?.url || '');
     setFormStatus('active');
     setFormIsSimple(false);
@@ -231,6 +234,7 @@ export function ProductsView() {
     setFormWholesalePrice(Number(product.wholesale_price) || 0);
     setFormTaxRate(product.tax_rate !== undefined && product.tax_rate !== null ? Number(product.tax_rate) : 0.15);
     setFormMinStock(product.min_stock_level || 3);
+    setFormDeadStockDays((product as any).dead_stock_days || 60);
     setFormImageUrl(product.image_url || '');
     setFormStatus(product.status || 'active');
     setFormIsSimple(Boolean(product.is_simple));
@@ -333,6 +337,7 @@ export function ProductsView() {
       wholesale_price: Number(formWholesalePrice) || 0,
       tax_rate: Number(formTaxRate),
       min_stock_level: Number(formMinStock) || 3,
+      dead_stock_days: Number(formDeadStockDays) || 60,
       image_url: formImageUrl.trim(),
       status: formStatus,
       is_simple: formIsSimple ? 1 : 0,
@@ -1270,11 +1275,12 @@ export function ProductsView() {
                 <div className="border-b border-[#EFECE6] pb-2">
                   <h4 className="text-xs font-semibold text-[#1A1A1A] uppercase tracking-wider flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-[#B89B65]" />
-                    2. Pricing & Financials
+                    2. Pricing & Stock Alerts
                   </h4>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {/* Price Row */}
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-[#1A1A1A] mb-1">
                       Selling Price (ETB) <span className="text-red-500">*</span>
@@ -1301,28 +1307,6 @@ export function ProductsView() {
                       className="w-full p-2 bg-[#F9F8F6] border border-[#E5E0D8] rounded-lg text-xs text-[#1A1A1A] focus:outline-none focus:border-[#B89B65]"
                     />
                   </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-[#1A1A1A] mb-1">Wholesale Price (ETB)</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={formWholesalePrice}
-                      onChange={e => setFormWholesalePrice(Number(e.target.value))}
-                      className="w-full p-2 bg-[#F9F8F6] border border-[#E5E0D8] rounded-lg text-xs text-[#1A1A1A] focus:outline-none focus:border-[#B89B65]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-[#1A1A1A] mb-1">Tax Rate (e.g. 0.15)</label>
-                    <input
-                      type="number"
-                      step="0.005"
-                      value={formTaxRate}
-                      onChange={e => setFormTaxRate(Number(e.target.value))}
-                      className="w-full p-2 bg-[#F9F8F6] border border-[#E5E0D8] rounded-lg text-xs text-[#1A1A1A] focus:outline-none focus:border-[#B89B65]"
-                    />
-                  </div>
                 </div>
 
                 {/* Barcode field — always visible at product level */}
@@ -1337,6 +1321,50 @@ export function ProductsView() {
                     onChange={e => setFormBarcode(e.target.value)}
                     className="w-full p-2 bg-[#F9F8F6] border border-[#E5E0D8] rounded-lg text-xs text-[#1A1A1A] focus:outline-none focus:border-[#B89B65]"
                   />
+                </div>
+
+                {/* Stock Alert Thresholds */}
+                <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 space-y-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <span className="text-xs font-semibold text-amber-800 uppercase tracking-wider">Stock Alert Thresholds</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-[#1A1A1A] mb-1">
+                        Low-Stock Alert (units)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={formMinStock}
+                        onChange={e => setFormMinStock(Number(e.target.value))}
+                        className="w-full p-2 bg-white border border-amber-200 rounded-lg text-xs text-[#1A1A1A] focus:outline-none focus:border-amber-400"
+                      />
+                      <p className="text-[10px] text-amber-700 mt-1">
+                        Alert fires when stock drops to or below this number.
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-[#1A1A1A] mb-1">
+                        Dead-Stock Alert (days)
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        step="1"
+                        value={formDeadStockDays}
+                        onChange={e => setFormDeadStockDays(Number(e.target.value))}
+                        className="w-full p-2 bg-white border border-amber-200 rounded-lg text-xs text-[#1A1A1A] focus:outline-none focus:border-amber-400"
+                      />
+                      <p className="text-[10px] text-amber-700 mt-1">
+                        Flag as dead stock if no sale recorded within this many days.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
 

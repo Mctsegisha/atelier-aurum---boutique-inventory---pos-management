@@ -81,6 +81,7 @@ CREATE TABLE IF NOT EXISTS public.products (
   purchase_price NUMERIC(10, 2) NOT NULL DEFAULT 0.0,
   selling_price NUMERIC(10, 2) NOT NULL DEFAULT 0.0,
   min_stock_level INTEGER NOT NULL DEFAULT 5,
+  dead_stock_days INTEGER NOT NULL DEFAULT 60,
   image_url TEXT,
   status TEXT NOT NULL DEFAULT 'active',
   season TEXT,

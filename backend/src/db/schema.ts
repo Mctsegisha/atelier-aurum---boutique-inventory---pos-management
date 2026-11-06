@@ -107,6 +107,7 @@ export const products = pgTable('products', {
   wholesalePrice: doublePrecision('wholesale_price').default(0),
   taxRate: doublePrecision('tax_rate').default(0.15),
   minStockLevel: integer('min_stock_level').notNull().default(5),
+  deadStockDays: integer('dead_stock_days').notNull().default(60),
   imageUrl: text('image_url'),
   status: text('status').notNull().default('active'), // active, archived, draft
   isSimple: integer('is_simple').notNull().default(0), // 1 = simple product, 0 = has variants
