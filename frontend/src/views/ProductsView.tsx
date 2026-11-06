@@ -90,6 +90,7 @@ export function ProductsView() {
   const [formSimpleStock, setFormSimpleStock] = useState<number>(10);
   const [formSimpleSku, setFormSimpleSku] = useState<string>('');
   const [formSimpleBarcode, setFormSimpleBarcode] = useState<string>('');
+  const [formBarcode, setFormBarcode] = useState<string>('');
 
   // Dynamic Attributes & Custom Attributes
   const [dynamicAttributes, setDynamicAttributes] = useState<Record<string, string>>({});
@@ -211,6 +212,7 @@ export function ProductsView() {
     setFormSimpleStock(12);
     setFormSimpleSku('');
     setFormSimpleBarcode('');
+    setFormBarcode('');
     setCustomAttributesList([]);
     setFormError(null);
     setShowProductModal(true);
@@ -232,6 +234,7 @@ export function ProductsView() {
     setFormImageUrl(product.image_url || '');
     setFormStatus(product.status || 'active');
     setFormIsSimple(Boolean(product.is_simple));
+    setFormBarcode(product.barcode || '');
 
     // Parse attributes
     let existingAttrs: Record<string, any> = {};
@@ -334,10 +337,10 @@ export function ProductsView() {
       status: formStatus,
       is_simple: formIsSimple ? 1 : 0,
       attributes: finalAttributes,
-      // If simple product: pass single stock quantity and custom sku
+      // If simple product: pass single stock quantity, sku and barcode
       initial_stock: formIsSimple ? Number(formSimpleStock) : undefined,
       sku: formIsSimple ? formSimpleSku : undefined,
-      barcode: formIsSimple ? formSimpleBarcode : undefined,
+      barcode: formIsSimple ? (formSimpleBarcode || formBarcode || undefined) : (formBarcode || undefined),
       // If multi-variant:
       variants: !formIsSimple
         ? variantsList.map(v => ({
@@ -1274,7 +1277,7 @@ export function ProductsView() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-[#1A1A1A] mb-1">
-                      Retail Selling Price (ETB) <span className="text-red-500">*</span>
+                      Selling Price (ETB) <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
@@ -1288,7 +1291,7 @@ export function ProductsView() {
 
                   <div>
                     <label className="block text-xs font-medium text-[#1A1A1A] mb-1">
-                      Cost / Purchase Price (ETB)
+                      Cost Price (ETB)
                     </label>
                     <input
                       type="number"
@@ -1320,6 +1323,20 @@ export function ProductsView() {
                       className="w-full p-2 bg-[#F9F8F6] border border-[#E5E0D8] rounded-lg text-xs text-[#1A1A1A] focus:outline-none focus:border-[#B89B65]"
                     />
                   </div>
+                </div>
+
+                {/* Barcode field — always visible at product level */}
+                <div>
+                  <label className="block text-xs font-medium text-[#1A1A1A] mb-1">
+                    Barcode / EAN-13
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Scan or enter barcode (leave blank to auto-generate)"
+                    value={formBarcode}
+                    onChange={e => setFormBarcode(e.target.value)}
+                    className="w-full p-2 bg-[#F9F8F6] border border-[#E5E0D8] rounded-lg text-xs text-[#1A1A1A] focus:outline-none focus:border-[#B89B65]"
+                  />
                 </div>
               </div>
 
