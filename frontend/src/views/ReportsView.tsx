@@ -136,15 +136,19 @@ export function ReportsView() {
 
           <div className="divide-y divide-[#F0EDE8] text-xs space-y-2">
             <div className="flex justify-between py-2 text-[#59554F]">
-              <span>Gross Sales (POS & Invoices)</span>
+              <span>Gross Sales (POS & Invoices, incl. VAT)</span>
               <span className="font-medium text-[#1A1A1A] tabular-nums">{formatCurrency(stats.total_revenue)}</span>
+            </div>
+            <div className="flex justify-between py-2 text-[#59554F]">
+              <span>Less: VAT Collected (15%)</span>
+              <span className="text-rose-700 font-medium tabular-nums">-{formatCurrency(stats.total_tax || 0)}</span>
             </div>
             <div className="flex justify-between py-2 text-[#59554F]">
               <span>Less: Returns & Customer Refunds</span>
               <span className="text-rose-700 font-medium tabular-nums">-{formatCurrency(stats.total_refunds)}</span>
             </div>
             <div className="flex justify-between py-2 font-semibold text-[#1A1A1A] bg-[#F9F8F6] px-2 rounded">
-              <span>Net Sales</span>
+              <span>Net Sales (Excl. VAT & Refunds)</span>
               <span className="tabular-nums">{formatCurrency(stats.net_sales)}</span>
             </div>
             <div className="flex justify-between py-2 text-[#59554F]">

@@ -187,7 +187,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
             {formatCurrency(stats.total_revenue)}
           </div>
           <div className="text-[11px] text-[#716D66] mt-1 flex items-center gap-1">
-            <span>{stats.total_transactions || 0} completed transactions</span>
+            <span>{stats.total_transactions || 0} sales · Incl. VAT ({formatCurrency(stats.total_tax || 0)})</span>
           </div>
         </div>
 
@@ -207,7 +207,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
           <div className="text-[11px] text-[#716D66] mt-1">
             {role === 'store_person'
               ? `${stats.total_items_sold || 0} items sold (before discounts & tax)`
-              : `After ${formatCurrency(stats.total_refunds)} refunds`}
+              : `Excl. VAT (${formatCurrency(stats.total_tax || 0)}) · After ${formatCurrency(stats.total_refunds || 0)} refunds`}
           </div>
         </div>
 

@@ -15,7 +15,8 @@ export class ReportsService {
     const cashierFilterId = role === 'sales' ? user.id : undefined;
     const salesSummary = this.repo.getSalesSummary(dateClause, cashierFilterId);
 
-    const netSales = Math.max(0, salesSummary.total_revenue - salesSummary.total_refunds);
+    // Net Sales = Total Revenue minus VAT tax and any refunds (pre-tax product revenue)
+    const netSales = Math.max(0, salesSummary.total_revenue - salesSummary.total_tax - salesSummary.total_refunds);
     const averageBasket =
       salesSummary.total_transactions > 0
         ? Math.round((netSales / salesSummary.total_transactions) * 100) / 100
