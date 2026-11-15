@@ -448,7 +448,7 @@ export function PosView() {
                           </span>
                         )}
                       </div>
-                      <h4 className="font-serif font-semibold text-sm text-[#1A1A1A] line-clamp-1 group-hover:text-[#B89B65] transition-colors mt-0.5">
+                      <h4 className="font-sans font-semibold text-sm text-[#1A1A1A] line-clamp-1 group-hover:text-[#B89B65] transition-colors mt-0.5">
                         {product.name}
                       </h4>
                       <div className="flex items-center justify-between mt-2 pt-2 border-t border-[#F0EDE8]">
@@ -479,7 +479,7 @@ export function PosView() {
         {/* Cart Header */}
         <div className="p-4 border-b border-[#E5E0D8] flex items-center justify-between">
           <div>
-            <h3 className="font-serif text-lg font-semibold text-[#1A1A1A]">Curated Bag</h3>
+            <h3 className="font-sans text-lg font-semibold text-[#1A1A1A]">Curated Bag</h3>
             <span className="text-xs text-[#716D66]">{cart.reduce((a, b) => a + b.quantity, 0)} Items Selected</span>
           </div>
 
@@ -529,7 +529,7 @@ export function PosView() {
           {cart.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center text-[#716D66] py-12">
               <ShoppingBag className="w-10 h-10 text-[#D8D2C7] stroke-[1.5] mb-2" />
-              <p className="text-sm font-serif text-[#1A1A1A]">Your shopping bag is empty</p>
+              <p className="text-sm font-sans text-[#1A1A1A]">Your shopping bag is empty</p>
               <p className="text-xs text-[#8C8275] mt-1">Scan a barcode or click any garment to add</p>
             </div>
           ) : (
@@ -625,7 +625,7 @@ export function PosView() {
               <span>Tax (VAT {Math.round(taxRate * 100)}%)</span>
               <span className="tabular-nums font-medium text-[#1A1A1A]">{formatCurrency(taxAmount)}</span>
             </div>
-            <div className="flex justify-between text-base font-serif font-bold text-[#1A1A1A] pt-2 border-t border-[#E5E0D8]">
+            <div className="flex justify-between text-base font-sans font-bold text-[#1A1A1A] pt-2 border-t border-[#E5E0D8]">
               <span>Grand Total</span>
               <span className="tabular-nums">{formatCurrency(grandTotal)}</span>
             </div>
@@ -656,7 +656,7 @@ export function PosView() {
             <div className="flex items-start justify-between">
               <div>
                 <span className="text-[10px] uppercase tracking-wider text-[#716D66]">Select Variant</span>
-                <h3 className="font-serif text-lg font-semibold text-[#1A1A1A]">{activeProductForVariant.name}</h3>
+                <h3 className="font-sans text-lg font-semibold text-[#1A1A1A]">{activeProductForVariant.name}</h3>
               </div>
               <button
                 onClick={() => setActiveProductForVariant(null)}
@@ -733,7 +733,7 @@ export function PosView() {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl border border-[#E5E0D8] max-w-lg w-full p-6 space-y-4 shadow-xl">
             <div className="flex items-center justify-between border-b border-[#E5E0D8] pb-3">
-              <h3 className="font-serif text-lg font-semibold text-[#1A1A1A]">Attach VIP Client Profile</h3>
+              <h3 className="font-sans text-lg font-semibold text-[#1A1A1A]">Attach VIP Client Profile</h3>
               <button
                 onClick={() => setShowCustomerModal(false)}
                 className="text-[#716D66] hover:text-[#1A1A1A] cursor-pointer"
@@ -821,7 +821,7 @@ export function PosView() {
             <div className="flex items-center justify-between border-b border-[#E5E0D8] pb-3">
               <div>
                 <span className="text-[10px] uppercase tracking-wider text-[#716D66]">Checkout Settlement</span>
-                <h3 className="font-serif text-xl font-semibold text-[#1A1A1A]">Select Payment Tender</h3>
+                <h3 className="font-sans text-xl font-semibold text-[#1A1A1A]">Select Payment Tender</h3>
               </div>
               <button
                 onClick={() => setShowPaymentModal(false)}
@@ -841,7 +841,7 @@ export function PosView() {
             {/* Total Display */}
             <div className="p-4 bg-[#F9F8F6] rounded-lg border border-[#E5E0D8] text-center">
               <span className="text-xs uppercase tracking-wider text-[#716D66]">Amount Due</span>
-              <div className="text-3xl font-serif font-bold text-[#1A1A1A] tabular-nums mt-0.5">
+              <div className="text-3xl font-sans font-bold text-[#1A1A1A] tabular-nums mt-0.5">
                 {formatCurrency(grandTotal)}
               </div>
               {selectedCustomer && (
@@ -921,7 +921,7 @@ export function PosView() {
                 <span className="text-[10px] tracking-[0.25em] uppercase text-[#716D66] font-medium block">
                   {completedReceipt.settings?.receipt_header || '*** HIRBIT STORE · HAWASSA ***\nPiyassa Mall, 1st Floor (Near Kibiru Hospital)'}
                 </span>
-                <h2 className="font-serif text-2xl font-semibold text-[#1A1A1A]">Hirbit Store</h2>
+                <h2 className="font-sans text-2xl font-semibold text-[#1A1A1A]">Hirbit Store</h2>
                 <p className="text-[11px] text-[#716D66]">{completedReceipt.settings?.address || 'Hawassa Piyassa Mall, 1st Floor (Near Kibiru Hospital), Hawassa'}</p>
                 <p className="text-[11px] text-[#716D66]">{completedReceipt.settings?.phone || '+251 91 123 4567'}</p>
               </div>
@@ -974,7 +974,7 @@ export function PosView() {
                   <span>Tax ({Math.round(Number(completedReceipt.tax_rate ?? taxRate) * 100)}%):</span>
                   <span className="tabular-nums">{formatCurrency(completedReceipt.tax_amount)}</span>
                 </div>
-                <div className="flex justify-between font-serif text-lg font-bold text-[#1A1A1A] pt-1 border-t border-[#E5E0D8]">
+                <div className="flex justify-between font-sans text-lg font-bold text-[#1A1A1A] pt-1 border-t border-[#E5E0D8]">
                   <span>Total Paid:</span>
                   <span className="tabular-nums">{formatCurrency(completedReceipt.total_amount)}</span>
                 </div>

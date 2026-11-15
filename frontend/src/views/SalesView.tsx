@@ -118,7 +118,7 @@ export function SalesView() {
           <span className="text-xs uppercase tracking-widest text-[#B89B65] font-medium">
             {role === 'sales' ? 'Personal Register History' : 'Boutique Transaction Ledger'}
           </span>
-          <h1 className="text-3xl font-serif font-medium text-[#1A1A1A] mt-1">
+          <h1 className="text-3xl font-sans font-medium text-[#1A1A1A] mt-1">
             {role === 'sales' ? 'My Completed Sales' : 'Sales, Invoices & Refunds'}
           </h1>
           <p className="text-xs text-[#716D66] mt-1">
@@ -130,7 +130,7 @@ export function SalesView() {
 
         <div className="text-right">
           <span className="text-[11px] uppercase tracking-wider text-[#716D66]">Period Sales Total</span>
-          <p className="text-2xl font-serif font-semibold text-[#1A1A1A] tabular-nums mt-0.5">
+          <p className="text-2xl font-sans font-semibold text-[#1A1A1A] tabular-nums mt-0.5">
             {formatCurrency(totalRevenue)}
           </p>
         </div>
@@ -279,7 +279,7 @@ export function SalesView() {
             <div className="flex items-start justify-between border-b border-[#E5E0D8] pb-4">
               <div>
                 <span className="text-[10px] uppercase tracking-wider text-[#716D66]">Transaction Slip</span>
-                <h3 className="font-serif text-xl font-semibold text-[#1A1A1A] mt-0.5">
+                <h3 className="font-sans text-xl font-semibold text-[#1A1A1A] mt-0.5">
                   Receipt #{selectedSaleDetail.sale.receipt_number}
                 </h3>
                 <p className="text-xs text-[#716D66]">
@@ -310,7 +310,7 @@ export function SalesView() {
                 <span className="text-[10px] uppercase tracking-wider text-[#716D66] font-medium block">
                   VIP Client Attached
                 </span>
-                <p className="font-serif text-sm font-semibold text-[#1A1A1A] mt-0.5">{selectedSaleDetail.sale.customer_name}</p>
+                <p className="font-sans text-sm font-semibold text-[#1A1A1A] mt-0.5">{selectedSaleDetail.sale.customer_name}</p>
                 <p className="text-[11px] text-[#716D66]">{selectedSaleDetail.sale.customer_phone || selectedSaleDetail.sale.customer_email}</p>
               </div>
             )}
@@ -347,7 +347,7 @@ export function SalesView() {
                 <span>Tax (15%)</span>
                 <span className="tabular-nums font-medium">{formatCurrency(selectedSaleDetail.sale.tax_amount)}</span>
               </div>
-              <div className="flex justify-between text-sm font-serif font-bold text-[#1A1A1A] pt-1.5 border-t border-[#E5E0D8]">
+              <div className="flex justify-between text-sm font-sans font-bold text-[#1A1A1A] pt-1.5 border-t border-[#E5E0D8]">
                 <span>Total Amount Paid</span>
                 <span className="tabular-nums">{formatCurrency(selectedSaleDetail.sale.total_amount)}</span>
               </div>
@@ -410,7 +410,7 @@ export function SalesView() {
             <div className="flex items-center justify-between border-b border-[#E5E0D8] pb-3">
               <div>
                 <span className="text-[10px] uppercase tracking-wider text-rose-700 font-semibold">Store Person / Admin Override</span>
-                <h3 className="font-serif text-lg font-semibold text-[#1A1A1A]">Authorize Customer Return</h3>
+                <h3 className="font-sans text-lg font-semibold text-[#1A1A1A]">Authorize Customer Return</h3>
               </div>
               <button
                 onClick={() => setShowRefundModal(false)}

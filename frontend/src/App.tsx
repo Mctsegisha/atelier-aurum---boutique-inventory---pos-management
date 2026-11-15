@@ -67,7 +67,7 @@ function MainApp() {
       <div className="min-h-screen bg-[#F9F8F6] flex items-center justify-center text-xs text-[#716D66]">
         <div className="text-center space-y-3">
           <div className="w-10 h-10 border-2 border-[#B89B65] border-t-transparent rounded-full animate-spin mx-auto" />
-          <h2 className="font-serif text-xl font-semibold text-[#1A1A1A]">Hirbit Store</h2>
+          <h2 className="font-sans text-xl font-semibold text-[#1A1A1A]">Hirbit Store</h2>
           <p className="text-[#8C8275]">Initializing store management system...</p>
         </div>
       </div>
@@ -89,7 +89,7 @@ function MainApp() {
             <ShieldAlert className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="font-serif text-xl font-semibold text-[#1A1A1A]">Access Restricted</h3>
+            <h3 className="font-sans text-xl font-semibold text-[#1A1A1A]">Access Restricted</h3>
             <p className="text-xs text-[#716D66] mt-1 leading-relaxed">
               Your active role <strong className="uppercase text-[#1A1A1A]">{role}</strong> is restricted from accessing the{' '}
               <code className="bg-[#F0EDE8] px-1.5 py-0.5 rounded text-[#1A1A1A] font-mono">{currentView}</code> workspace.

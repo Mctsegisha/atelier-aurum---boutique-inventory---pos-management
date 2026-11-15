@@ -119,7 +119,7 @@ export function InventoryView() {
           <span className="text-xs uppercase tracking-widest text-[#B89B65] font-medium">
             Hirbit Store Inventory Control
           </span>
-          <h1 className="text-3xl font-serif font-medium text-[#1A1A1A] mt-1">Inventory & Stock Movements</h1>
+          <h1 className="text-3xl font-sans font-medium text-[#1A1A1A] mt-1">Inventory & Stock Movements</h1>
           <p className="text-xs text-[#716D66] mt-1">
             Real-time stock quantities across sizes, low-stock threshold triggers, and mandatory movement audit logging.
           </p>
@@ -140,11 +140,11 @@ export function InventoryView() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="p-4 bg-white rounded-lg border border-[#E5E0D8]">
           <span className="text-[11px] uppercase tracking-wider text-[#716D66] font-medium">Total Active SKUs</span>
-          <p className="text-2xl font-serif font-semibold text-[#1A1A1A] tabular-nums mt-1">{items.length}</p>
+          <p className="text-2xl font-sans font-semibold text-[#1A1A1A] tabular-nums mt-1">{items.length}</p>
         </div>
         <div className="p-4 bg-white rounded-lg border border-[#E5E0D8]">
           <span className="text-[11px] uppercase tracking-wider text-[#716D66] font-medium">Total On-Hand Units</span>
-          <p className="text-2xl font-serif font-semibold text-[#1A1A1A] tabular-nums mt-1">{totalUnits}</p>
+          <p className="text-2xl font-sans font-semibold text-[#1A1A1A] tabular-nums mt-1">{totalUnits}</p>
         </div>
         <div
           onClick={() => setLowStockOnly(!lowStockOnly)}
@@ -158,7 +158,7 @@ export function InventoryView() {
             <span className="text-[11px] uppercase tracking-wider text-[#716D66] font-medium">Low Stock Alerts</span>
             <AlertTriangle className="w-4 h-4 text-amber-600" />
           </div>
-          <p className="text-2xl font-serif font-semibold text-amber-800 tabular-nums mt-1">{lowStockCount}</p>
+          <p className="text-2xl font-sans font-semibold text-amber-800 tabular-nums mt-1">{lowStockCount}</p>
         </div>
         <div className="p-4 bg-white rounded-lg border border-[#E5E0D8]">
           <span className="text-[11px] uppercase tracking-wider text-[#716D66] font-medium">Primary Store Location</span>
@@ -240,7 +240,7 @@ export function InventoryView() {
                             )}
                           </div>
                           <div>
-                            <p className="font-serif text-sm font-semibold text-[#1A1A1A]">{item.product_name}</p>
+                            <p className="font-sans text-sm font-semibold text-[#1A1A1A]">{item.product_name}</p>
                             <div className="flex items-center gap-1.5 text-[11px] text-[#716D66] mt-0.5">
                               {item.color_code && item.color !== 'Standard' && (
                                 <span
@@ -336,7 +336,7 @@ export function InventoryView() {
             <div className="flex items-center justify-between border-b border-[#E5E0D8] pb-3">
               <div>
                 <span className="text-[10px] uppercase tracking-wider text-[#716D66]">Audited Stock Adjustment</span>
-                <h3 className="font-serif text-lg font-semibold text-[#1A1A1A]">
+                <h3 className="font-sans text-lg font-semibold text-[#1A1A1A]">
                   {selectedItemForAdjust.product_name}
                 </h3>
                 <p className="text-xs text-[#716D66]">{selectedItemForAdjust.size} · {selectedItemForAdjust.color} ({selectedItemForAdjust.sku})</p>
@@ -439,7 +439,7 @@ export function InventoryView() {
           <div className="bg-white w-full max-w-xl h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-200">
             <div className="p-5 border-b border-[#E5E0D8] flex items-center justify-between">
               <div>
-                <h3 className="font-serif text-lg font-semibold text-[#1A1A1A]">Inventory Movement Ledger</h3>
+                <h3 className="font-sans text-lg font-semibold text-[#1A1A1A]">Inventory Movement Ledger</h3>
                 <p className="text-xs text-[#716D66]">Immutable record of all stock adjustments, sales, and intake</p>
               </div>
               <button

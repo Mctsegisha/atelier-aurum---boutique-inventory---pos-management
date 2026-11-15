@@ -134,7 +134,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
           <span className="text-xs uppercase tracking-widest text-[#B89B65] font-medium">
             {role === 'admin' ? 'Hirbit Store Executive Analytics' : role === 'store_person' ? 'Store Operations Overview' : 'Shift Sales Console'}
           </span>
-          <h1 className="text-3xl lg:text-4xl font-serif font-medium text-[#1A1A1A] mt-1">
+          <h1 className="text-3xl lg:text-4xl font-sans font-medium text-[#1A1A1A] mt-1">
             {role === 'admin' ? 'Financial & Inventory Health' : role === 'store_person' ? 'Hawassa Retail Operations' : 'My Daily Sales Summary'}
           </h1>
           <div className="flex items-center gap-2 text-xs text-[#716D66] mt-2">
@@ -220,7 +220,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
             </span>
             <ShoppingCart className="w-4 h-4 text-emerald-500 shrink-0" />
           </div>
-          <div className="text-2xl lg:text-3xl font-serif font-semibold text-[#1A1A1A] mt-3 tabular-nums">
+          <div className="text-2xl lg:text-3xl font-sans font-semibold text-[#1A1A1A] mt-3 tabular-nums">
             {formatCardCurrency(stats.total_revenue)}
           </div>
           <div className="text-xs text-[#716D66] mt-1.5">
@@ -236,7 +236,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
             </span>
             <TrendingUp className="w-4 h-4 text-emerald-500 shrink-0" />
           </div>
-          <div className="text-2xl lg:text-3xl font-serif font-semibold text-[#1A1A1A] mt-3 tabular-nums">
+          <div className="text-2xl lg:text-3xl font-sans font-semibold text-[#1A1A1A] mt-3 tabular-nums">
             {formatCardCurrency(stats.gross_profit)}
           </div>
           <div className="text-xs text-[#716D66] mt-1.5">
@@ -255,7 +255,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
             </span>
             <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
           </div>
-          <div className="text-2xl lg:text-3xl font-serif font-semibold text-[#1A1A1A] mt-3 tabular-nums">
+          <div className="text-2xl lg:text-3xl font-sans font-semibold text-[#1A1A1A] mt-3 tabular-nums">
             {stats.low_stock_count ?? 0}
           </div>
           <div className="text-xs text-[#716D66] mt-1.5">
@@ -274,7 +274,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
             </span>
             <Clock className="w-4 h-4 text-rose-500 shrink-0" />
           </div>
-          <div className="text-2xl lg:text-3xl font-serif font-semibold text-[#1A1A1A] mt-3 tabular-nums">
+          <div className="text-2xl lg:text-3xl font-sans font-semibold text-[#1A1A1A] mt-3 tabular-nums">
             {stats.slow_moving_count ?? 0}
           </div>
           <div className="text-xs text-[#716D66] mt-1.5">
@@ -293,7 +293,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
             </span>
             <Package className="w-4 h-4 text-[#1E3E31] shrink-0" />
           </div>
-          <div className="text-2xl lg:text-3xl font-serif font-semibold text-[#1A1A1A] mt-3 tabular-nums">
+          <div className="text-2xl lg:text-3xl font-sans font-semibold text-[#1A1A1A] mt-3 tabular-nums">
             {stats.total_products ?? 0}
           </div>
           <div className="text-xs text-[#716D66] mt-1.5">
@@ -308,7 +308,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
           <div className="p-4 bg-[#EFECE6]/50 rounded-lg border border-[#E5E0D8] flex items-center justify-between">
             <div>
               <span className="text-[11px] uppercase tracking-wider text-[#716D66] font-medium">Retail Valuation</span>
-              <p className="text-xl font-serif font-semibold text-[#1A1A1A] tabular-nums mt-0.5">
+              <p className="text-xl font-sans font-semibold text-[#1A1A1A] tabular-nums mt-0.5">
                 {formatCurrency(stats.inventory_retail_value)}
               </p>
             </div>
@@ -320,7 +320,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
           <div className="p-4 bg-[#EFECE6]/50 rounded-lg border border-[#E5E0D8] flex items-center justify-between">
             <div>
               <span className="text-[11px] uppercase tracking-wider text-[#716D66] font-medium">Inventory Cost Valuation</span>
-              <p className="text-xl font-serif font-semibold text-[#1A1A1A] tabular-nums mt-0.5">
+              <p className="text-xl font-sans font-semibold text-[#1A1A1A] tabular-nums mt-0.5">
                 {formatCurrency(stats.inventory_cost_value)}
               </p>
             </div>
@@ -338,7 +338,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
           <div className="lg:col-span-2 p-6 bg-white rounded-xl border border-[#E5E0D8] shadow-xs space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-base font-serif font-semibold text-[#1A1A1A]">Daily Revenue Momentum</h3>
+                <h3 className="text-base font-sans font-semibold text-[#1A1A1A]">Daily Revenue Momentum</h3>
                 <p className="text-xs text-[#716D66]">Aggregated revenue from Hirbit Store POS and sales transactions</p>
               </div>
             </div>
@@ -397,7 +397,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
           {/* Sales by Category (Bar Chart) */}
           <div className="p-6 bg-white rounded-xl border border-[#E5E0D8] shadow-xs space-y-4">
             <div>
-              <h3 className="text-base font-serif font-semibold text-[#1A1A1A]">Sales by Category</h3>
+              <h3 className="text-base font-sans font-semibold text-[#1A1A1A]">Sales by Category</h3>
               <p className="text-xs text-[#716D66]">Volume and revenue breakdown</p>
             </div>
             <div className="h-64 w-full">
@@ -429,7 +429,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
         {/* Top Selling Products */}
         <div className="p-6 bg-white rounded-xl border border-[#E5E0D8] shadow-xs space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-serif font-semibold text-[#1A1A1A]">Curated Best Sellers</h3>
+            <h3 className="text-base font-sans font-semibold text-[#1A1A1A]">Curated Best Sellers</h3>
             <button
               onClick={() => onNavigate('products')}
               className="text-xs text-[#B89B65] hover:underline cursor-pointer"
@@ -469,7 +469,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
 
         {/* Payment Methods Breakdown */}
         <div className="p-6 bg-white rounded-xl border border-[#E5E0D8] shadow-xs space-y-4">
-          <h3 className="text-base font-serif font-semibold text-[#1A1A1A]">Settlement Channels</h3>
+          <h3 className="text-base font-sans font-semibold text-[#1A1A1A]">Settlement Channels</h3>
           <div className="space-y-3">
             {charts.payment_methods && charts.payment_methods.length > 0 ? (
               charts.payment_methods.map((pm: any, idx: number) => {
@@ -496,7 +496,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
         {/* Cashier Team Performance */}
         <div className="p-6 bg-white rounded-xl border border-[#E5E0D8] shadow-xs space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-serif font-semibold text-[#1A1A1A]">Sales Team Volume</h3>
+            <h3 className="text-base font-sans font-semibold text-[#1A1A1A]">Sales Team Volume</h3>
             {role === 'admin' && (
               <button
                 onClick={() => onNavigate('employees')}
@@ -531,7 +531,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
         <div className="p-6 bg-white rounded-xl border border-[#E5E0D8] shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-base font-serif font-semibold text-[#1A1A1A]">Slow-Moving Stock</h3>
+              <h3 className="text-base font-sans font-semibold text-[#1A1A1A]">Slow-Moving Stock</h3>
               <p className="text-xs text-[#716D66]">Products with available stock but no sales in the last 60 days</p>
             </div>
             <button

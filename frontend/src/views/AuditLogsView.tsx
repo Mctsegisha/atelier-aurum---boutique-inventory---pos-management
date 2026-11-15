@@ -46,7 +46,7 @@ export function AuditLogsView() {
           <span className="text-xs uppercase tracking-widest text-[#B89B65] font-medium">
             Forensic & Compliance Oversight
           </span>
-          <h1 className="text-3xl font-serif font-medium text-[#1A1A1A] mt-1">Security Audit Trail</h1>
+          <h1 className="text-3xl font-sans font-medium text-[#1A1A1A] mt-1">Security Audit Trail</h1>
           <p className="text-xs text-[#716D66] mt-1">
             Immutable log of all staff logins, role assignments, inventory alterations, checkouts, and refund overrides.
           </p>

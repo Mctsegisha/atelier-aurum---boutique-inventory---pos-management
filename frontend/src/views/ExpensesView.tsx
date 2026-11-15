@@ -99,7 +99,7 @@ export function ExpensesView() {
           <span className="text-xs uppercase tracking-widest text-[#B89B65] font-medium">
             Store Operational Disbursements
           </span>
-          <h1 className="text-3xl font-serif font-medium text-[#1A1A1A] mt-1">Operating Expenses</h1>
+          <h1 className="text-3xl font-sans font-medium text-[#1A1A1A] mt-1">Operating Expenses</h1>
           <p className="text-xs text-[#716D66] mt-1">
             Track store utilities, packaging, supplies, maintenance, and operating costs.
           </p>
@@ -108,7 +108,7 @@ export function ExpensesView() {
         <div className="flex items-center gap-4">
           <div className="text-right">
             <span className="text-[10px] uppercase tracking-wider text-[#716D66]">Period Total</span>
-            <p className="text-2xl font-serif font-semibold text-[#1A1A1A] tabular-nums mt-0.5">
+            <p className="text-2xl font-sans font-semibold text-[#1A1A1A] tabular-nums mt-0.5">
               {formatCurrency(totalExpenseAmount)}
             </p>
           </div>
@@ -233,7 +233,7 @@ export function ExpensesView() {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl border border-[#E5E0D8] max-w-md w-full p-6 space-y-4 shadow-xl">
             <div className="flex items-center justify-between border-b border-[#E5E0D8] pb-3">
-              <h3 className="font-serif text-lg font-semibold text-[#1A1A1A]">Record Operational Expense</h3>
+              <h3 className="font-sans text-lg font-semibold text-[#1A1A1A]">Record Operational Expense</h3>
               <button onClick={() => setShowAddModal(false)} className="text-[#716D66] hover:text-[#1A1A1A] cursor-pointer">
                 <X className="w-4 h-4" />
               </button>

@@ -105,7 +105,7 @@ export function SettingsView() {
           <span className="text-xs uppercase tracking-widest text-[#B89B65] font-medium">
             System Preferences
           </span>
-          <h1 className="text-3xl font-serif font-medium text-[#1A1A1A] mt-1">Store Configuration</h1>
+          <h1 className="text-3xl font-sans font-medium text-[#1A1A1A] mt-1">Store Configuration</h1>
           <p className="text-xs text-[#716D66] mt-1">
             Configure store identity, taxation, low-stock notifications, and printed receipt templates.
           </p>
@@ -124,7 +124,7 @@ export function SettingsView() {
         <div className="bg-white rounded-xl border border-[#E5E0D8] p-6 shadow-xs space-y-4">
           <div className="flex items-center gap-2 pb-2 border-b border-[#E5E0D8]">
             <Building className="w-4 h-4 text-[#B89B65]" />
-            <h3 className="font-serif text-base font-semibold text-[#1A1A1A]">Store Identity</h3>
+            <h3 className="font-sans text-base font-semibold text-[#1A1A1A]">Store Identity</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -183,7 +183,7 @@ export function SettingsView() {
         <div className="bg-white rounded-xl border border-[#E5E0D8] p-6 shadow-xs space-y-4">
           <div className="flex items-center gap-2 pb-2 border-b border-[#E5E0D8]">
             <Percent className="w-4 h-4 text-[#B89B65]" />
-            <h3 className="font-serif text-base font-semibold text-[#1A1A1A]">Taxation & Inventory Policy</h3>
+            <h3 className="font-sans text-base font-semibold text-[#1A1A1A]">Taxation & Inventory Policy</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -243,7 +243,7 @@ export function SettingsView() {
         <div className="bg-white rounded-xl border border-[#E5E0D8] p-6 shadow-xs space-y-4">
           <div className="flex items-center gap-2 pb-2 border-b border-[#E5E0D8]">
             <Receipt className="w-4 h-4 text-[#B89B65]" />
-            <h3 className="font-serif text-base font-semibold text-[#1A1A1A]">Printed Thermal Receipt Slip</h3>
+            <h3 className="font-sans text-base font-semibold text-[#1A1A1A]">Printed Thermal Receipt Slip</h3>
           </div>
 
           <div>

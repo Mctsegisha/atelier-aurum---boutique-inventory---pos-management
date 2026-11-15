@@ -26,7 +26,7 @@ export function LoginView() {
           <span className="text-[10px] tracking-[0.25em] uppercase text-[#B89B65] font-semibold block">
             Boutique Inventory & POS Management
           </span>
-          <h1 className="font-serif text-4xl font-semibold tracking-tight text-[#1A1A1A]">
+          <h1 className="font-sans text-4xl font-semibold tracking-tight text-[#1A1A1A]">
             Hirbit Store
           </h1>
           <p className="text-xs text-[#716D66] max-w-sm mx-auto">

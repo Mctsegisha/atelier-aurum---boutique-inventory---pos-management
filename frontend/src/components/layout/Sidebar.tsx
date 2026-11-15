@@ -150,7 +150,7 @@ export function Sidebar({ currentView, onNavigate }: SidebarProps) {
 
   return (
     <aside
-      className={`bg-white border-r border-gray-200 h-screen flex flex-col justify-between shrink-0 select-none z-30 transition-all duration-200 ease-in-out ${
+      className={`bg-white border-r border-gray-200 h-screen flex flex-col justify-between shrink-0 select-none z-30 transition-all duration-200 ease-in-out font-sans ${
         isCollapsed ? 'w-[70px]' : 'w-64'
       }`}
     >
@@ -161,10 +161,10 @@ export function Sidebar({ currentView, onNavigate }: SidebarProps) {
             <Activity className="w-5 h-5 text-[#1C4E3D] stroke-[2.2]" />
           </div>
           {!isCollapsed && (
-            <div className="min-w-0 flex-1">
-              <h1 className="text-sm font-bold text-slate-900 tracking-tight leading-tight truncate">
+            <div className="min-w-0 flex-1 font-sans">
+              <span className="block text-sm font-bold text-slate-900 tracking-tight leading-tight truncate font-sans">
                 Hirbit Store
-              </h1>
+              </span>
               <p className="text-[11px] text-gray-400 font-normal leading-tight mt-0.5 truncate">
                 Boutique ERP
               </p>

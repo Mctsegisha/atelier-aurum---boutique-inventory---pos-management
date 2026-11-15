@@ -107,7 +107,7 @@ export function CustomersView() {
           <span className="text-xs uppercase tracking-widest text-[#B89B65] font-medium">
             Clientele & Private Salon Relations
           </span>
-          <h1 className="text-3xl font-serif font-medium text-[#1A1A1A] mt-1">VIP Client Directory</h1>
+          <h1 className="text-3xl font-sans font-medium text-[#1A1A1A] mt-1">VIP Client Directory</h1>
           <p className="text-xs text-[#716D66] mt-1">
             Maintain curated client profiles, fitting preferences, cumulative loyalty points, and purchase histories.
           </p>
@@ -154,11 +154,11 @@ export function CustomersView() {
               <div>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#EFECE6] border border-[#D8D2C7] flex items-center justify-center font-serif font-bold text-base text-[#1A1A1A]">
+                    <div className="w-10 h-10 rounded-full bg-[#EFECE6] border border-[#D8D2C7] flex items-center justify-center font-sans font-bold text-base text-[#1A1A1A]">
                       {c.full_name.charAt(0)}
                     </div>
                     <div>
-                      <h4 className="font-serif font-semibold text-base text-[#1A1A1A]">{c.full_name}</h4>
+                      <h4 className="font-sans font-semibold text-base text-[#1A1A1A]">{c.full_name}</h4>
                       <span className="text-[11px] text-[#B89B65] font-medium">VIP Tier · {c.loyalty_points} Points</span>
                     </div>
                   </div>
@@ -188,7 +188,7 @@ export function CustomersView() {
               <div className="pt-3 border-t border-[#F0EDE8] flex items-center justify-between text-xs">
                 <div>
                   <span className="text-[10px] text-[#8C8275] uppercase block">Lifetime Spend</span>
-                  <span className="font-serif font-semibold text-sm text-[#1A1A1A] tabular-nums">
+                  <span className="font-sans font-semibold text-sm text-[#1A1A1A] tabular-nums">
                     {formatCurrency(c.total_spent)}
                   </span>
                 </div>
@@ -211,7 +211,7 @@ export function CustomersView() {
             <div className="p-6 border-b border-[#E5E0D8] flex items-start justify-between">
               <div>
                 <span className="text-[10px] uppercase tracking-wider text-[#B89B65] font-medium">VIP Client Record</span>
-                <h3 className="font-serif text-2xl font-semibold text-[#1A1A1A] mt-0.5">
+                <h3 className="font-sans text-2xl font-semibold text-[#1A1A1A] mt-0.5">
                   {activeCustomer.customer.full_name}
                 </h3>
                 <p className="text-xs text-[#716D66]">{activeCustomer.customer.phone} · {activeCustomer.customer.email}</p>
@@ -229,13 +229,13 @@ export function CustomersView() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-3 bg-[#F9F8F6] rounded-lg border border-[#E5E0D8]">
                   <span className="text-[10px] text-[#716D66] uppercase">Lifetime Purchases</span>
-                  <p className="text-xl font-serif font-bold text-[#1A1A1A] tabular-nums mt-0.5">
+                  <p className="text-xl font-sans font-bold text-[#1A1A1A] tabular-nums mt-0.5">
                     {formatCurrency(activeCustomer.customer.total_spent)}
                   </p>
                 </div>
                 <div className="p-3 bg-[#F9F8F6] rounded-lg border border-[#E5E0D8]">
                   <span className="text-[10px] text-[#716D66] uppercase">Loyalty Points</span>
-                  <p className="text-xl font-serif font-bold text-[#B89B65] tabular-nums mt-0.5">
+                  <p className="text-xl font-sans font-bold text-[#B89B65] tabular-nums mt-0.5">
                     {activeCustomer.customer.loyalty_points} Pts
                   </p>
                 </div>
@@ -260,7 +260,7 @@ export function CustomersView() {
 
               {/* Purchase History */}
               <div className="space-y-3">
-                <span className="font-serif font-semibold text-base text-[#1A1A1A] block">
+                <span className="font-sans font-semibold text-base text-[#1A1A1A] block">
                   Past Purchases ({activeCustomer.purchases.length})
                 </span>
 
@@ -296,7 +296,7 @@ export function CustomersView() {
             <div className="flex items-center justify-between border-b border-[#E5E0D8] pb-3">
               <div>
                 <span className="text-[10px] uppercase tracking-wider text-[#716D66]">New Client Registry</span>
-                <h3 className="font-serif text-lg font-semibold text-[#1A1A1A]">Register VIP Profile</h3>
+                <h3 className="font-sans text-lg font-semibold text-[#1A1A1A]">Register VIP Profile</h3>
               </div>
               <button
                 onClick={() => setShowAddModal(false)}

@@ -90,7 +90,7 @@ export function ReportsView() {
           <span className="text-xs uppercase tracking-widest text-[#B89B65] font-medium">
             Financial & Operational Intelligence
           </span>
-          <h1 className="text-3xl font-serif font-medium text-[#1A1A1A] mt-1">
+          <h1 className="text-3xl font-sans font-medium text-[#1A1A1A] mt-1">
             {role === 'admin' ? 'Financial Profit & Loss Statement' : 'Store Operational Reports'}
           </h1>
           <p className="text-xs text-[#716D66] mt-1">
@@ -130,7 +130,7 @@ export function ReportsView() {
       {role === 'admin' && (
         <div className="bg-white rounded-xl border border-[#E5E0D8] p-6 shadow-xs space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-[#E5E0D8]">
-            <h3 className="font-serif text-lg font-semibold text-[#1A1A1A]">Executive P&L Income Statement</h3>
+            <h3 className="font-sans text-lg font-semibold text-[#1A1A1A]">Executive P&L Income Statement</h3>
             <span className="text-xs text-[#716D66]">Accrual & Cash Basis Integrated</span>
           </div>
 
@@ -155,7 +155,7 @@ export function ReportsView() {
               <span>Less: Cost of Goods Sold (COGS - Product Cost)</span>
               <span className="text-amber-800 font-medium tabular-nums">-{formatCurrency(stats.cogs)}</span>
             </div>
-            <div className="flex justify-between py-2.5 font-serif text-sm font-bold text-[#1A1A1A] bg-[#EFECE6]/50 px-2 rounded">
+            <div className="flex justify-between py-2.5 font-sans text-sm font-bold text-[#1A1A1A] bg-[#EFECE6]/50 px-2 rounded">
               <span>Gross Profit (Net Sales - COGS)</span>
               <span className="tabular-nums text-[#B89B65]">{formatCurrency(stats.gross_profit)}</span>
             </div>
@@ -163,7 +163,7 @@ export function ReportsView() {
               <span>Less: Operating Expenses (Store Rent, Packaging, Utilities)</span>
               <span className="text-rose-700 font-medium tabular-nums">-{formatCurrency(stats.total_expenses)}</span>
             </div>
-            <div className="flex justify-between py-3 font-serif text-lg font-bold text-emerald-900 bg-emerald-50 px-3 rounded border border-emerald-200">
+            <div className="flex justify-between py-3 font-sans text-lg font-bold text-emerald-900 bg-emerald-50 px-3 rounded border border-emerald-200">
               <span>Net Store Operating Profit</span>
               <span className="tabular-nums">{formatCurrency(stats.net_profit)}</span>
             </div>
@@ -175,7 +175,7 @@ export function ReportsView() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Sales by Category */}
         <div className="bg-white rounded-xl border border-[#E5E0D8] p-6 shadow-xs space-y-4">
-          <h3 className="font-serif text-base font-semibold text-[#1A1A1A]">Category Sales Contribution</h3>
+          <h3 className="font-sans text-base font-semibold text-[#1A1A1A]">Category Sales Contribution</h3>
           <div className="divide-y divide-[#F0EDE8] text-xs">
             {charts.sales_by_category?.map((c: any, idx: number) => (
               <div key={idx} className="py-2.5 flex items-center justify-between">
@@ -191,7 +191,7 @@ export function ReportsView() {
 
         {/* Staff Volume */}
         <div className="bg-white rounded-xl border border-[#E5E0D8] p-6 shadow-xs space-y-4">
-          <h3 className="font-serif text-base font-semibold text-[#1A1A1A]">Cashier Sales Breakdown</h3>
+          <h3 className="font-sans text-base font-semibold text-[#1A1A1A]">Cashier Sales Breakdown</h3>
           <div className="divide-y divide-[#F0EDE8] text-xs">
             {charts.cashier_performance?.map((c: any, idx: number) => (
               <div key={idx} className="py-2.5 flex items-center justify-between">

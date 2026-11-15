@@ -50,7 +50,7 @@ export function Header({ currentView, onNavigate }: HeaderProps) {
           onClick={() => onNavigate(role === 'sales' ? 'pos' : 'dashboard')}
           className="text-left group cursor-pointer focus:outline-none"
         >
-          <span className="font-serif text-xl font-semibold tracking-wide text-[#1A1A1A] group-hover:text-[#1C4E3D] transition-colors whitespace-nowrap shrink-0">
+          <span className="font-sans text-xl font-semibold tracking-wide text-[#1A1A1A] group-hover:text-[#1C4E3D] transition-colors whitespace-nowrap shrink-0">
             {currentView === 'dashboard'
               ? (role === 'admin' ? 'Executive Dashboard' : 'Store Dashboard')
               : currentView === 'pos'

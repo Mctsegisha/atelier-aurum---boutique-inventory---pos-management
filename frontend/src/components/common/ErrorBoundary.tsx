@@ -37,7 +37,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <AlertTriangle className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="font-serif text-xl font-semibold text-[#1A1A1A]">
+            <h3 className="font-sans text-xl font-semibold text-[#1A1A1A]">
               {this.props.fallbackTitle || 'Workspace Display Error'}
             </h3>
             <p className="text-xs text-[#716D66] mt-2 leading-relaxed">

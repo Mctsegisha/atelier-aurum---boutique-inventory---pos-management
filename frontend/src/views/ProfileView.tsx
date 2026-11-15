@@ -47,7 +47,7 @@ export function ProfileView() {
         <span className="text-xs uppercase tracking-widest text-[#B89B65] font-medium">
           Operator Credentials
         </span>
-        <h1 className="text-3xl font-serif font-medium text-[#1A1A1A] mt-1">My Staff Profile</h1>
+        <h1 className="text-3xl font-sans font-medium text-[#1A1A1A] mt-1">My Staff Profile</h1>
         <p className="text-xs text-[#716D66] mt-1">
           Review your verified permissions, assigned role tier, and security credentials.
         </p>
@@ -60,13 +60,13 @@ export function ProfileView() {
             {user?.avatar_url ? (
               <img src={user.avatar_url} alt={user.full_name} className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center font-serif text-2xl font-bold text-[#1A1A1A]">
+              <div className="w-full h-full flex items-center justify-center font-sans text-2xl font-bold text-[#1A1A1A]">
                 {user?.full_name?.charAt(0)}
               </div>
             )}
           </div>
           <div>
-            <h3 className="font-serif text-xl font-semibold text-[#1A1A1A]">{user?.full_name}</h3>
+            <h3 className="font-sans text-xl font-semibold text-[#1A1A1A]">{user?.full_name}</h3>
             <p className="text-xs text-[#716D66]">{user?.email} · @{user?.username}</p>
             <span className="inline-block mt-1 px-2.5 py-0.5 bg-[#1A1A1A] text-white text-[10px] uppercase tracking-wider font-semibold rounded">
               Role: {role}
@@ -91,7 +91,7 @@ export function ProfileView() {
       <div className="bg-white rounded-xl border border-[#E5E0D8] p-6 shadow-xs space-y-4">
         <div className="flex items-center gap-2 pb-2 border-b border-[#E5E0D8]">
           <Key className="w-4 h-4 text-[#B89B65]" />
-          <h3 className="font-serif text-base font-semibold text-[#1A1A1A]">Update Staff Password</h3>
+          <h3 className="font-sans text-base font-semibold text-[#1A1A1A]">Update Staff Password</h3>
         </div>
 
         {successMsg && (

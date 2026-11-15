@@ -503,7 +503,7 @@ export function ProductsView() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-[#E5E0D8] pb-5">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="font-serif text-2xl font-bold tracking-tight text-[#1A1A1A]">Product Management</h1>
+            <h1 className="font-sans text-2xl font-bold tracking-tight text-[#1A1A1A]">Product Management</h1>
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#B89B65]/15 text-[#8C733E]">
               10 Department Catalog
             </span>
@@ -1070,7 +1070,7 @@ export function ProductsView() {
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-[#B89B65]">
                   {editingProductId ? 'Edit Boutique Article' : 'New Article Creation'}
                 </span>
-                <h3 className="font-serif text-lg font-bold text-[#1A1A1A]">
+                <h3 className="font-sans text-lg font-bold text-[#1A1A1A]">
                   {editingProductId ? `Edit "${formName || 'Article'}"` : 'Register Product into Luxury Catalog'}
                 </h3>
               </div>
@@ -1806,7 +1806,7 @@ export function ProductsView() {
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-[#B89B65]">
                   Boutique Catalog Hierarchy
                 </span>
-                <h3 className="font-serif text-lg font-bold text-[#1A1A1A]">Departments & Subcategories Manager</h3>
+                <h3 className="font-sans text-lg font-bold text-[#1A1A1A]">Departments & Subcategories Manager</h3>
               </div>
               <button
                 onClick={() => setShowCatManagerModal(false)}
@@ -1956,7 +1956,7 @@ export function ProductsView() {
                 <span className="text-[10px] font-semibold text-[#B89B65] uppercase tracking-wider">
                   {viewProductDetails.category_name} · {viewProductDetails.subcategory_name || 'Item'}
                 </span>
-                <h3 className="font-serif text-lg font-bold text-[#1A1A1A]">{viewProductDetails.name}</h3>
+                <h3 className="font-sans text-lg font-bold text-[#1A1A1A]">{viewProductDetails.name}</h3>
               </div>
               <button
                 onClick={() => setViewProductDetails(null)}

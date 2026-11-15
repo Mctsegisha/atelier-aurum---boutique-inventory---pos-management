@@ -81,7 +81,7 @@ export function ShiftView() {
         <span className="text-xs uppercase tracking-widest text-[#B89B65] font-medium">
           POS Terminal Register
         </span>
-        <h1 className="text-3xl font-serif font-medium text-[#1A1A1A] mt-1">Shift & Cash Reconciliation</h1>
+        <h1 className="text-3xl font-sans font-medium text-[#1A1A1A] mt-1">Shift & Cash Reconciliation</h1>
         <p className="text-xs text-[#716D66] mt-1">
           Open your daily register with a counted cash drawer float and reconcile end-of-shift receipts.
         </p>
@@ -108,14 +108,14 @@ export function ShiftView() {
           <div className="grid grid-cols-2 gap-4">
             <div className="p-4 bg-[#F9F8F6] rounded-lg border border-[#E5E0D8]">
               <span className="text-[11px] text-[#716D66] uppercase block">Opening Cash Float</span>
-              <p className="text-2xl font-serif font-bold text-[#1A1A1A] tabular-nums mt-0.5">
+              <p className="text-2xl font-sans font-bold text-[#1A1A1A] tabular-nums mt-0.5">
                 {formatCurrency(activeShift.starting_cash)}
               </p>
             </div>
 
             <div className="p-4 bg-[#F9F8F6] rounded-lg border border-[#E5E0D8]">
               <span className="text-[11px] text-[#716D66] uppercase block">Total Sales Processed</span>
-              <p className="text-2xl font-serif font-bold text-[#B89B65] tabular-nums mt-0.5">
+              <p className="text-2xl font-sans font-bold text-[#B89B65] tabular-nums mt-0.5">
                 {formatCurrency(activeShift.total_sales)}
               </p>
             </div>
@@ -179,7 +179,7 @@ export function ShiftView() {
         <div className="bg-white rounded-xl border border-[#E5E0D8] p-6 shadow-xs space-y-5">
           <div className="text-center space-y-1">
             <Clock className="w-8 h-8 text-[#B89B65] mx-auto stroke-[1.5]" />
-            <h3 className="font-serif text-xl font-semibold text-[#1A1A1A]">Open Register Session</h3>
+            <h3 className="font-sans text-xl font-semibold text-[#1A1A1A]">Open Register Session</h3>
             <p className="text-xs text-[#716D66]">Count your opening cash drawer float to start taking sales</p>
           </div>
 

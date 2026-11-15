@@ -105,7 +105,7 @@ export function EmployeesView() {
           <span className="text-xs uppercase tracking-widest text-[#B89B65] font-medium">
             Store Governance & RBAC
           </span>
-          <h1 className="text-3xl font-serif font-medium text-[#1A1A1A] mt-1">Staff Accounts & Role Assignment</h1>
+          <h1 className="text-3xl font-sans font-medium text-[#1A1A1A] mt-1">Staff Accounts & Role Assignment</h1>
           <p className="text-xs text-[#716D66] mt-1">
             Create employee credentials, assign role tiers (System Administrator, Store Manager, Sales Associate), and toggle active access.
           </p>
@@ -146,7 +146,7 @@ export function EmployeesView() {
                   <tr key={u.id} className="hover:bg-[#F9F8F6]/60 transition-colors">
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-[#EFECE6] border border-[#D8D2C7] flex items-center justify-center font-serif font-bold text-sm text-[#1A1A1A]">
+                        <div className="w-9 h-9 rounded-full bg-[#EFECE6] border border-[#D8D2C7] flex items-center justify-center font-sans font-bold text-sm text-[#1A1A1A]">
                           {u.full_name.charAt(0)}
                         </div>
                         <div>
@@ -214,7 +214,7 @@ export function EmployeesView() {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl border border-[#E5E0D8] max-w-md w-full p-6 space-y-4 shadow-xl">
             <div className="flex items-center justify-between border-b border-[#E5E0D8] pb-3">
-              <h3 className="font-serif text-lg font-semibold text-[#1A1A1A]">Create Staff Account</h3>
+              <h3 className="font-sans text-lg font-semibold text-[#1A1A1A]">Create Staff Account</h3>
               <button onClick={() => setShowAddModal(false)} className="text-[#716D66] hover:text-[#1A1A1A] cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
