@@ -141,10 +141,10 @@ function MainApp() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F9F8F6] flex flex-col font-sans">
-      <Header currentView={currentView} onNavigate={handleNavigate} />
-      <div className="flex-1 flex overflow-hidden">
-        <Sidebar currentView={currentView} onNavigate={handleNavigate} />
+    <div className="h-screen bg-[#F9F8F6] flex overflow-hidden font-sans">
+      <Sidebar currentView={currentView} onNavigate={handleNavigate} />
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+        <Header currentView={currentView} onNavigate={handleNavigate} />
         <main className="flex-1 overflow-y-auto">
           <ErrorBoundary key={currentView}>
             {renderView()}

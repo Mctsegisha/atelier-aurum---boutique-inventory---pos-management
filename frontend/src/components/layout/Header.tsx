@@ -44,17 +44,45 @@ export function Header({ currentView, onNavigate }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-40 bg-[#F9F8F6]/95 backdrop-blur-md border-b border-[#E5E0D8] px-6 py-3.5 flex items-center justify-between gap-8 transition-colors">
-      {/* Zone 1: Single text element wordmark */}
+      {/* Zone 1: Current View Title & Operations */}
       <div className="flex items-center gap-3 shrink-0">
         <button
           onClick={() => onNavigate(role === 'sales' ? 'pos' : 'dashboard')}
           className="text-left group cursor-pointer focus:outline-none"
         >
-          <span className="font-serif text-2xl font-semibold tracking-wide text-[#1A1A1A] group-hover:text-[#B89B65] transition-colors whitespace-nowrap shrink-0">
-            Hirbit Store
+          <span className="font-serif text-xl font-semibold tracking-wide text-[#1A1A1A] group-hover:text-[#1C4E3D] transition-colors whitespace-nowrap shrink-0">
+            {currentView === 'dashboard'
+              ? (role === 'admin' ? 'Executive Dashboard' : 'Store Dashboard')
+              : currentView === 'pos'
+              ? 'Point of Sale'
+              : currentView === 'products'
+              ? 'Product Catalog'
+              : currentView === 'inventory'
+              ? 'Inventory & Stock'
+              : currentView === 'sales'
+              ? 'Sales & Receipts'
+              : currentView === 'customers'
+              ? 'Customers'
+              : currentView === 'suppliers'
+              ? 'Suppliers & Orders'
+              : currentView === 'expenses'
+              ? 'Store Expenses'
+              : currentView === 'reports'
+              ? 'Financial Analytics'
+              : currentView === 'employees'
+              ? 'Staff & Roles'
+              : currentView === 'settings'
+              ? 'Store Settings'
+              : currentView === 'audit'
+              ? 'Security Audit Logs'
+              : currentView === 'shift'
+              ? 'Register & Shift'
+              : currentView === 'profile'
+              ? 'My Profile'
+              : 'Hirbit Store'}
           </span>
-          <span className="block text-[11px] tracking-[0.2em] uppercase text-[#716D66] font-sans">
-            Inventory & POS System
+          <span className="block text-[11px] tracking-[0.15em] uppercase text-[#716D66] font-sans">
+            Operations Workspace
           </span>
         </button>
       </div>
