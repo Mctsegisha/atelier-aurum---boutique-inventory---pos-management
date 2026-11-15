@@ -42,52 +42,41 @@ export function Header({ currentView, onNavigate }: HeaderProps) {
     }
   };
 
+  const getViewTitle = () => {
+    switch (currentView) {
+      case 'dashboard': return role === 'admin' ? 'Executive Dashboard' : 'Store Dashboard';
+      case 'pos': return 'Point of Sale';
+      case 'products': return 'Product Catalog';
+      case 'inventory': return 'Inventory & Stock';
+      case 'sales': return 'Sales & Receipts';
+      case 'customers': return 'Customers';
+      case 'suppliers': return 'Suppliers & Orders';
+      case 'expenses': return 'Store Expenses';
+      case 'reports': return 'Financial Analytics';
+      case 'employees': return 'Staff & Roles';
+      case 'settings': return 'Store Settings';
+      case 'audit': return 'Security Audit Logs';
+      case 'shift': return 'Register & Shift';
+      case 'profile': return 'My Profile';
+      default: return 'Hirbit Store';
+    }
+  };
+
   return (
-    <header className="sticky top-0 z-40 bg-[#F9F8F6]/95 backdrop-blur-md border-b border-[#E5E0D8] px-6 py-3.5 flex items-center justify-between gap-8 transition-colors">
-      {/* Zone 1: Current View Title & Operations */}
+    <header className="sticky top-0 z-40 bg-[#F9F8F6]/95 backdrop-blur-md border-b border-[#E5E0D8] px-5 py-2 flex items-center justify-between gap-6 transition-colors">
+      {/* Zone 1: Current View Title */}
       <div className="flex items-center gap-3 shrink-0">
         <button
           onClick={() => onNavigate(role === 'sales' ? 'pos' : 'dashboard')}
           className="text-left group cursor-pointer focus:outline-none"
         >
-          <span className="font-sans text-xl font-semibold tracking-wide text-[#1A1A1A] group-hover:text-[#1C4E3D] transition-colors whitespace-nowrap shrink-0">
-            {currentView === 'dashboard'
-              ? (role === 'admin' ? 'Executive Dashboard' : 'Store Dashboard')
-              : currentView === 'pos'
-              ? 'Point of Sale'
-              : currentView === 'products'
-              ? 'Product Catalog'
-              : currentView === 'inventory'
-              ? 'Inventory & Stock'
-              : currentView === 'sales'
-              ? 'Sales & Receipts'
-              : currentView === 'customers'
-              ? 'Customers'
-              : currentView === 'suppliers'
-              ? 'Suppliers & Orders'
-              : currentView === 'expenses'
-              ? 'Store Expenses'
-              : currentView === 'reports'
-              ? 'Financial Analytics'
-              : currentView === 'employees'
-              ? 'Staff & Roles'
-              : currentView === 'settings'
-              ? 'Store Settings'
-              : currentView === 'audit'
-              ? 'Security Audit Logs'
-              : currentView === 'shift'
-              ? 'Register & Shift'
-              : currentView === 'profile'
-              ? 'My Profile'
-              : 'Hirbit Store'}
-          </span>
-          <span className="block text-[11px] tracking-[0.15em] uppercase text-[#716D66] font-sans">
-            Operations Workspace
+          <span className="font-sans text-sm font-semibold text-[#1A1A1A] group-hover:text-[#1C4E3D] transition-colors whitespace-nowrap">
+            {getViewTitle()}
           </span>
         </button>
       </div>
 
-      {/* Zone 2: Navigation status & quick actions */}
+      {/* Zone 2: Navigation status */}
       <div className="hidden lg:flex items-center gap-2 text-xs text-[#716D66]">
         <span>Hawassa Piyassa Mall, 1st Floor</span>
         <span aria-hidden="true">·</span>
@@ -96,14 +85,14 @@ export function Header({ currentView, onNavigate }: HeaderProps) {
         <span className="tabular-nums">Terminal 01</span>
       </div>
 
-      {/* Zone 3: Interactive Controls (Active Role Badge, Notifications, Profile) */}
-      <div className="flex items-center gap-3 shrink-0">
+      {/* Zone 3: Interactive Controls */}
+      <div className="flex items-center gap-2.5 shrink-0">
         {/* Verified Role Badge */}
-        <div className="flex items-center gap-1.5 px-3 py-1 bg-[#EFECE6] rounded-md border border-[#E5E0D8]">
+        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#EFECE6] rounded-md border border-[#E5E0D8]">
           <span className="text-[10px] uppercase tracking-wider text-[#716D66] font-medium hidden sm:inline">
             Role:
           </span>
-          <span className="text-xs font-semibold text-[#1A1A1A]">
+          <span className="text-[11px] font-semibold text-[#1A1A1A]">
             {role === 'admin' ? 'System Administrator' : role === 'store_person' ? 'Store Manager' : 'Sales Associate'}
           </span>
         </div>

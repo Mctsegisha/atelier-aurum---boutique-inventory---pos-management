@@ -75,7 +75,7 @@ export function ShiftView() {
   };
 
   return (
-    <div className="p-6 lg:p-8 space-y-6 max-w-2xl mx-auto">
+    <div className="p-5 space-y-5 max-w-2xl">
       {/* Header */}
       <div className="pb-6 border-b border-[#E5E0D8]">
         <span className="text-xs uppercase tracking-widest text-[#B89B65] font-medium">

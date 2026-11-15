@@ -498,7 +498,7 @@ export function ProductsView() {
   };
 
   return (
-    <div className="p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
+    <div className="p-5 space-y-5">
       {/* View Header & Action Bar */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-[#E5E0D8] pb-6">
         <div>

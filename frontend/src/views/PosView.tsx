@@ -312,7 +312,7 @@ export function PosView() {
   );
 
   return (
-    <div className="h-[calc(100vh-61px)] flex flex-col lg:flex-row overflow-hidden bg-[#F9F8F6]">
+    <div className="h-[calc(100vh-45px)] flex flex-col lg:flex-row overflow-hidden bg-[#F9F8F6]">
       {/* ============================================================== */}
       {/* LEFT SECTION: Catalog, Categories, Barcode Scan, Product Cards */}
       {/* ============================================================== */}
