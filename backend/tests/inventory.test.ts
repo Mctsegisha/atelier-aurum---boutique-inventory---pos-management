@@ -30,6 +30,37 @@ describe('Inventory Validation Schemas', () => {
     assert.equal(res.data.type, 'damage');
   });
 
+  it('should accept valid adjustment with "add" direction and positive quantity', () => {
+    const res = adjustStockSchema.body.safeParse({
+      variant_id: 'v_add_1',
+      adjustment_type: 'add',
+      quantity: 10,
+      type: 'received',
+      reason: 'Found - Additional units found in backroom'
+    });
+    assert.ok(res.success);
+    assert.equal(res.data.variant_id, 'v_add_1');
+    assert.equal(res.data.adjustment_type, 'add');
+    assert.equal(res.data.quantity, 10);
+    assert.equal(res.data.type, 'received');
+    assert.equal(res.data.reason, 'Found - Additional units found in backroom');
+  });
+
+  it('should accept valid adjustment with "subtract" direction and positive quantity', () => {
+    const res = adjustStockSchema.body.safeParse({
+      variant_id: 'v_sub_1',
+      adjustment_type: 'subtract',
+      quantity: 5,
+      type: 'damage',
+      reason: 'Damaged - Stained hem during display'
+    });
+    assert.ok(res.success);
+    assert.equal(res.data.variant_id, 'v_sub_1');
+    assert.equal(res.data.adjustment_type, 'subtract');
+    assert.equal(res.data.quantity, 5);
+    assert.equal(res.data.type, 'damage');
+  });
+
   it('should reject adjustment if neither quantity nor new_quantity is provided', () => {
     const res = adjustStockSchema.body.safeParse({
       variant_id: 'v_123',

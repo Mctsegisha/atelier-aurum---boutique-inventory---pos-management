@@ -26,6 +26,7 @@ import {
   Filter,
   CheckCircle2,
   RefreshCw,
+  SlidersHorizontal,
   Boxes,
   Tag,
   AlertOctagon
@@ -62,18 +63,13 @@ export function InventoryView() {
   const [expandedProductIds, setExpandedProductIds] = useState<Set<string>>(new Set());
 
   // Stock Adjustment Modal state
-  const [adjustTarget, setAdjustTarget] = useState<{
-    productName: string;
-    variantId: string;
-    batchNumber: string;
-    size: string;
-    color: string;
-    currentQuantity: number;
-    minThreshold: number;
-  } | null>(null);
-  const [adjustNewQty, setAdjustNewQty] = useState<number>(0);
-  const [adjustType, setAdjustType] = useState<string>('adjustment');
-  const [adjustReason, setAdjustReason] = useState<string>('');
+  const [adjustModalProduct, setAdjustModalProduct] = useState<ParentInventoryProduct | null>(null);
+  const [selectedBatchId, setSelectedBatchId] = useState<string>('');
+  const [adjustDirection, setAdjustDirection] = useState<'add' | 'remove'>('add');
+  const [adjustQuantityInput, setAdjustQuantityInput] = useState<string>('0');
+  const [adjustReasonOption, setAdjustReasonOption] = useState<string>('');
+  const [adjustNote, setAdjustNote] = useState<string>('');
+  const [showNoteField, setShowNoteField] = useState<boolean>(false);
   const [isAdjusting, setIsAdjusting] = useState<boolean>(false);
   const [adjustError, setAdjustError] = useState<string | null>(null);
 
@@ -201,61 +197,87 @@ export function InventoryView() {
 
   // Open adjustment modal for a child batch/variant
   const handleOpenAdjustBatch = (product: ParentInventoryProduct, batch: InventoryBatch) => {
-    setAdjustTarget({
-      productName: product.product_name,
-      variantId: batch.variant_id,
-      batchNumber: batch.batch_number || batch.sku,
-      size: batch.size,
-      color: batch.color,
-      currentQuantity: batch.quantity,
-      minThreshold: batch.min_threshold
-    });
-    setAdjustNewQty(batch.quantity);
-    setAdjustType('adjustment');
-    setAdjustReason('');
+    setAdjustModalProduct(product);
+    setSelectedBatchId(batch.variant_id);
+    setAdjustDirection('add');
+    setAdjustQuantityInput('0');
+    setAdjustReasonOption('');
+    setAdjustNote('');
+    setShowNoteField(false);
     setAdjustError(null);
   };
 
   // Open adjustment modal for a parent product (picks first variant or opens picker)
   const handleOpenAdjustParent = (product: ParentInventoryProduct) => {
     if (product.batches.length === 0) return;
-    if (product.batches.length === 1) {
-      handleOpenAdjustBatch(product, product.batches[0]);
-    } else {
-      // If multiple batches, expand the row and highlight
-      if (!expandedProductIds.has(product.product_id)) {
-        toggleRowExpand(product.product_id);
-      }
-      // Target the first batch by default
-      handleOpenAdjustBatch(product, product.batches[0]);
-    }
+    setAdjustModalProduct(product);
+    setSelectedBatchId(product.batches[0]?.variant_id || '');
+    setAdjustDirection('add');
+    setAdjustQuantityInput('0');
+    setAdjustReasonOption('');
+    setAdjustNote('');
+    setShowNoteField(false);
+    setAdjustError(null);
   };
 
   // Confirm and persist stock adjustment
   const handleConfirmAdjustment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!adjustTarget) return;
+    if (!adjustModalProduct) return;
 
-    if (!adjustReason.trim() || adjustReason.trim().length < 3) {
-      setAdjustError('A mandatory clear reason is required for inventory audit compliance.');
+    if (!selectedBatchId) {
+      setAdjustError('Please select a batch.');
+      return;
+    }
+
+    const qty = parseInt(adjustQuantityInput, 10);
+    if (isNaN(qty) || qty <= 0) {
+      setAdjustError('Please enter a positive quantity greater than 0.');
+      return;
+    }
+
+    if (!adjustReasonOption) {
+      setAdjustError('Please select a reason for the adjustment.');
+      return;
+    }
+
+    const selectedBatch = adjustModalProduct.batches.find(b => b.variant_id === selectedBatchId);
+    if (adjustDirection === 'remove' && selectedBatch && qty > selectedBatch.quantity) {
+      setAdjustError(`Cannot remove ${qty} units. Current stock for batch ${selectedBatch.batch_number} is only ${selectedBatch.quantity}.`);
       return;
     }
 
     setIsAdjusting(true);
     setAdjustError(null);
 
+    // Map reason to movement type
+    let movementType = 'adjustment';
+    if (adjustReasonOption === 'Damaged' || adjustReasonOption === 'Lost') {
+      movementType = 'damage';
+    } else if (adjustReasonOption === 'Found') {
+      movementType = 'received';
+    } else if (adjustReasonOption === 'Count Correction') {
+      movementType = 'adjustment';
+    }
+
+    const fullReason = adjustNote.trim()
+      ? `${adjustReasonOption} - ${adjustNote.trim()}`
+      : adjustReasonOption;
+
     try {
       await api.adjustInventory({
-        variant_id: adjustTarget.variantId,
-        new_quantity: Number(adjustNewQty),
-        type: adjustType,
-        reason: adjustReason.trim()
+        variant_id: selectedBatchId,
+        adjustment_type: adjustDirection === 'add' ? 'add' : 'subtract',
+        quantity: qty,
+        type: movementType,
+        reason: fullReason
       });
 
-      setSuccessMsg(`Stock for "${adjustTarget.productName} (${adjustTarget.size} · ${adjustTarget.color})" updated to ${adjustNewQty} units.`);
+      const batchLabel = selectedBatch ? `${selectedBatch.batch_number} (${selectedBatch.size} · ${selectedBatch.color})` : '';
+      setSuccessMsg(`Stock successfully ${adjustDirection === 'add' ? 'added to' : 'removed from'} "${adjustModalProduct.product_name}" ${batchLabel}.`);
       setTimeout(() => setSuccessMsg(null), 4000);
 
-      setAdjustTarget(null);
+      setAdjustModalProduct(null);
       await Promise.all([loadInventory(), loadStats()]);
       if (activeTab === 'adjustments') loadMovements();
     } catch (err: any) {
@@ -1153,114 +1175,196 @@ export function InventoryView() {
       {/* ============================================================== */}
       {/* MODAL 1: Stock Adjustment Modal                                */}
       {/* ============================================================== */}
-      {adjustTarget && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl border border-gray-200 max-w-md w-full p-6 space-y-4 shadow-xl animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+      {adjustModalProduct && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl border border-gray-200 max-w-md w-full p-6 space-y-4 shadow-xl animate-in zoom-in-95 duration-150">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between">
               <div>
-                <span className="text-[10px] uppercase font-semibold tracking-wider text-gray-500">
-                  Audited Stock Adjustment
-                </span>
-                <h3 className="font-bold text-base text-gray-900 mt-0.5">
-                  {adjustTarget.productName}
-                </h3>
-                <p className="text-xs text-gray-500 font-mono">
-                  {adjustTarget.size} · {adjustTarget.color} ({adjustTarget.batchNumber})
-                </p>
+                <h3 className="text-base font-bold text-gray-900 tracking-tight">Adjust Stock</h3>
+                <p className="text-xs text-gray-500 mt-0.5">Record a real stock increase or decrease.</p>
               </div>
               <button
                 type="button"
-                onClick={() => setAdjustTarget(null)}
-                className="text-gray-400 hover:text-gray-700 p-1 rounded-lg cursor-pointer transition-colors"
+                onClick={() => setAdjustModalProduct(null)}
+                className="text-gray-400 hover:text-gray-600 p-1 -mr-1 -mt-1 rounded-lg cursor-pointer transition-colors"
+                title="Close"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {adjustError && (
-              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-lg text-xs font-medium">
+              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs font-medium">
                 {adjustError}
               </div>
             )}
 
             <form onSubmit={handleConfirmAdjustment} className="space-y-4 text-xs">
-              <div className="p-3.5 bg-gray-50 rounded-xl border border-gray-200 flex justify-between items-center">
-                <div>
-                  <span className="text-[11px] text-gray-500 block">Current On-Hand:</span>
-                  <span className="text-lg font-bold font-mono text-gray-900 tabular-nums">
-                    {adjustTarget.currentQuantity} units
-                  </span>
-                </div>
-                <div className="text-right">
-                  <span className="text-[11px] text-gray-500 block">Net Adjustment:</span>
-                  <span
-                    className={`text-lg font-bold font-mono tabular-nums ${
-                      adjustNewQty - adjustTarget.currentQuantity >= 0 ? 'text-emerald-600' : 'text-rose-600'
+              {/* "What changed?" Toggle Cards */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-900 mb-2">What changed?</label>
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Add stock card */}
+                  <button
+                    type="button"
+                    onClick={() => setAdjustDirection('add')}
+                    className={`text-left p-3.5 rounded-xl transition-all cursor-pointer border ${
+                      adjustDirection === 'add'
+                        ? 'border-[#759A8B] bg-[#EBF3EF] shadow-2xs'
+                        : 'border-gray-200 bg-white hover:bg-gray-50/50'
                     }`}
                   >
-                    {adjustNewQty - adjustTarget.currentQuantity >= 0 ? '+' : ''}
-                    {adjustNewQty - adjustTarget.currentQuantity}
-                  </span>
+                    <div className={`text-xs font-bold ${adjustDirection === 'add' ? 'text-[#244234]' : 'text-gray-900'}`}>
+                      Add stock
+                    </div>
+                    <div className={`text-[11px] mt-0.5 ${adjustDirection === 'add' ? 'text-[#4D6D5E]' : 'text-gray-500'}`}>
+                      Received or found
+                    </div>
+                  </button>
+
+                  {/* Remove stock card */}
+                  <button
+                    type="button"
+                    onClick={() => setAdjustDirection('remove')}
+                    className={`text-left p-3.5 rounded-xl transition-all cursor-pointer border ${
+                      adjustDirection === 'remove'
+                        ? 'border-[#759A8B] bg-[#EBF3EF] shadow-2xs'
+                        : 'border-gray-200 bg-white hover:bg-gray-50/50'
+                    }`}
+                  >
+                    <div className={`text-xs font-bold ${adjustDirection === 'remove' ? 'text-[#244234]' : 'text-gray-900'}`}>
+                      Remove stock
+                    </div>
+                    <div className={`text-[11px] mt-0.5 ${adjustDirection === 'remove' ? 'text-[#4D6D5E]' : 'text-gray-500'}`}>
+                      Damaged, expired, or lost
+                    </div>
+                  </button>
                 </div>
               </div>
 
+              {/* Quantity and Reason Grid */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Quantity */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-900 mb-1.5">
+                    Quantity <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    required
+                    value={adjustQuantityInput}
+                    onChange={e => setAdjustQuantityInput(e.target.value)}
+                    placeholder="0"
+                    className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs sm:text-sm font-medium text-gray-900 focus:outline-none focus:border-[#759A8B] focus:ring-1 focus:ring-[#759A8B]"
+                  />
+                  <p className="text-[11px] text-gray-500 mt-1.5 leading-snug">
+                    Enter a positive number; the action above sets the direction.
+                  </p>
+                </div>
+
+                {/* Reason Dropdown */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-900 mb-1.5">
+                    Reason <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <select
+                      required
+                      value={adjustReasonOption}
+                      onChange={e => setAdjustReasonOption(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs sm:text-sm font-medium text-gray-900 focus:outline-none focus:border-[#759A8B] focus:ring-1 focus:ring-[#759A8B] cursor-pointer appearance-none pr-9"
+                    >
+                      <option value="" disabled>Select reason</option>
+                      <option value="Damaged">Damaged</option>
+                      <option value="Lost">Lost</option>
+                      <option value="Found">Found</option>
+                      <option value="Count Correction">Count Correction</option>
+                    </select>
+                    <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Batch # Selector */}
               <div>
-                <label className="block text-gray-700 font-medium mb-1">
-                  New Verified Count (Units) <span className="text-rose-500">*</span>
+                <label className="block text-xs font-semibold text-gray-900 mb-1.5">
+                  Batch # <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  required
-                  value={adjustNewQty}
-                  onChange={e => setAdjustNewQty(Number(e.target.value))}
-                  className="w-full p-2.5 bg-white border border-gray-200 rounded-lg text-sm font-semibold font-mono tabular-nums focus:outline-none focus:border-[#B89B65]"
-                />
+                <div className="relative">
+                  <select
+                    required
+                    value={selectedBatchId}
+                    onChange={e => setSelectedBatchId(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-xs sm:text-sm font-medium text-gray-900 focus:outline-none focus:border-[#759A8B] focus:ring-1 focus:ring-[#759A8B] cursor-pointer appearance-none pr-9"
+                  >
+                    <option value="" disabled>Select batch</option>
+                    {adjustModalProduct.batches.map(batch => (
+                      <option key={batch.variant_id} value={batch.variant_id}>
+                        {batch.batch_number} {batch.size ? `· ${batch.size}` : ''} {batch.color ? `· ${batch.color}` : ''} ({batch.quantity} on hand)
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+                <p className="text-[11px] text-gray-500 mt-1.5">
+                  Which physical batch the change applies to.
+                </p>
               </div>
 
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">Movement Classification</label>
-                <select
-                  value={adjustType}
-                  onChange={e => setAdjustType(e.target.value)}
-                  className="w-full p-2.5 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-[#B89B65] cursor-pointer"
-                >
-                  <option value="adjustment">Manual Count Adjustment / Cycle Count</option>
-                  <option value="damage">Damaged Fabric / Garment Floor Defect</option>
-                  <option value="returned">Customer Return Intake</option>
-                  <option value="transfer">Inter-store Location Transfer</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">
-                  Audit Reason & Reference <span className="text-rose-500">*</span>
-                </label>
-                <textarea
-                  required
-                  placeholder="e.g. End of month physical inventory reconciliation; shelf count defect..."
-                  rows={2}
-                  value={adjustReason}
-                  onChange={e => setAdjustReason(e.target.value)}
-                  className="w-full p-2.5 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-[#B89B65]"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-3 border-t border-gray-200">
+              {/* Collapsible "Add a note" container */}
+              <div className="border border-gray-200 rounded-2xl bg-white p-3.5 transition-all">
                 <button
                   type="button"
-                  onClick={() => setAdjustTarget(null)}
-                  className="px-4 py-2 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 cursor-pointer font-medium transition-colors"
+                  onClick={() => setShowNoteField(prev => !prev)}
+                  className="w-full flex items-center justify-between text-left cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl border border-gray-200 bg-white flex items-center justify-center text-gray-600 shrink-0 shadow-2xs">
+                      <SlidersHorizontal className="w-4 h-4 text-gray-600" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-gray-900">Add a note</div>
+                      <div className="text-[11px] text-gray-500">Record context for the audit trail.</div>
+                    </div>
+                  </div>
+                  {showNoteField ? (
+                    <ChevronUp className="w-4 h-4 text-gray-400" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-gray-400" />
+                  )}
+                </button>
+
+                {showNoteField && (
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <textarea
+                      placeholder="Record context for the audit trail..."
+                      rows={2}
+                      value={adjustNote}
+                      onChange={e => setAdjustNote(e.target.value)}
+                      className="w-full p-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:outline-none focus:border-[#759A8B] focus:bg-white resize-none"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Footer Actions */}
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setAdjustModalProduct(null)}
+                  className="px-5 py-2.5 border border-gray-200 rounded-xl text-xs font-semibold text-gray-700 bg-white hover:bg-gray-50 cursor-pointer transition-colors shadow-2xs"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isAdjusting}
-                  className="px-4 py-2 bg-[#1A1A1A] hover:bg-[#B89B65] text-white rounded-lg font-medium transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                  className="px-5 py-2.5 bg-[#759A8B] hover:bg-[#628476] text-white rounded-xl text-xs font-semibold transition-colors cursor-pointer shadow-2xs disabled:opacity-50"
                 >
-                  {isAdjusting ? 'Recording Audit...' : 'Save Stock Adjustment'}
+                  {isAdjusting ? 'Processing...' : adjustDirection === 'add' ? 'Add stock' : 'Remove stock'}
                 </button>
               </div>
             </form>
