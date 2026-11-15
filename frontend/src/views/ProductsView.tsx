@@ -423,6 +423,7 @@ export function ProductsView() {
       attributes: null,
       // If simple product: pass single stock quantity, sku and barcode
       initial_stock: formIsSimple ? Number(formSimpleStock) : undefined,
+      quantity: formIsSimple ? Number(formSimpleStock) : undefined,
       sku: formIsSimple ? formSimpleSku : undefined,
       barcode: formIsSimple ? (formSimpleBarcode || formBarcode || undefined) : (formBarcode || undefined),
       // If multi-variant:
@@ -437,7 +438,9 @@ export function ProductsView() {
             barcode: v.barcode,
             purchase_price: v.purchase_price !== undefined ? Number(v.purchase_price) : Number(formPurchasePrice),
             selling_price: v.selling_price !== undefined ? Number(v.selling_price) : Number(formSellingPrice),
-            quantity: Number(v.quantity) || 0
+            quantity: Number(v.quantity) || 0,
+            initial_stock: Number(v.quantity) || 0,
+            stock_quantity: Number(v.quantity) || 0
           }))
         : []
     };

@@ -17,7 +17,7 @@ export class ProductsRepository {
              b.name as brand_name, s.company_name as supplier_name,
              u1.full_name as created_by_name,
              u2.full_name as approved_by_name,
-        (SELECT SUM(i.quantity) FROM inventory i JOIN product_variants pv ON i.variant_id = pv.id WHERE pv.product_id = p.id) as total_stock
+        (SELECT COALESCE(SUM(i.quantity), 0) FROM inventory i JOIN product_variants pv ON i.variant_id = pv.id WHERE pv.product_id = p.id) as total_stock
       FROM products p
       LEFT JOIN categories c ON p.category_id = c.id
       LEFT JOIN subcategories sc ON p.subcategory_id = sc.id

@@ -184,7 +184,7 @@ export class ProductsService {
         const variantId = generateId('v');
         const sku = (customSku && customSku.trim()) ? customSku.trim() : `${cleanPrefix}-${Math.floor(1000 + Math.random() * 9000)}`;
         const barcode = (customBarcode && customBarcode.trim()) ? customBarcode.trim() : `${Math.floor(100000000000 + Math.random() * 900000000000)}`;
-        const qty = Number(initial_stock) || 0;
+        const qty = Number(initial_stock !== undefined ? initial_stock : ((body as any).quantity !== undefined ? (body as any).quantity : 0)) || 0;
 
         insertVarStmt.run(
           variantId,
@@ -226,7 +226,8 @@ export class ProductsService {
             Number(v.selling_price || selling_price) || 0
           );
 
-          const qty = Number(v.initial_stock || 0);
+          // Support quantity, initial_stock, and stock_quantity
+          const qty = Number(v.quantity !== undefined ? v.quantity : (v.initial_stock !== undefined ? v.initial_stock : (v.stock_quantity !== undefined ? v.stock_quantity : 0))) || 0;
           insertInvStmt.run(`inv_${variantId}`, variantId, qty, Number(min_stock_level) || 3);
 
           if (qty > 0) {
@@ -323,41 +324,155 @@ export class ProductsService {
       collection = existing.collection,
       gender = existing.gender,
       material = existing.material,
-      attributes = existing.attributes
+      attributes = existing.attributes,
+      variants
     } = body;
 
     const serializedAttrs = attributes ? (typeof attributes === 'string' ? attributes : JSON.stringify(attributes)) : null;
 
-    db.prepare(`
-      UPDATE products SET
-        name = ?, description = ?, category_id = ?, subcategory_id = ?, brand_id = ?,
-        supplier_id = ?, purchase_price = ?, selling_price = ?, wholesale_price = ?,
-        tax_rate = ?, min_stock_level = ?, dead_stock_days = ?, image_url = ?, status = ?, is_simple = ?,
-        season = ?, collection = ?, gender = ?, material = ?, attributes = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `).run(
-      name,
-      description,
-      category_id || null,
-      subcategory_id || null,
-      brand_id || null,
-      supplier_id || null,
-      Number(purchase_price),
-      Number(selling_price),
-      Number(wholesale_price),
-      Number(tax_rate),
-      Number(min_stock_level),
-      Number(dead_stock_days) || 60,
-      image_url || null,
-      status,
-      Number(is_simple) ? 1 : 0,
-      season || null,
-      collection || null,
-      gender || null,
-      material || null,
-      serializedAttrs,
-      productId
-    );
+    this.repo.executeTransaction(() => {
+      db.prepare(`
+        UPDATE products SET
+          name = ?, description = ?, category_id = ?, subcategory_id = ?, brand_id = ?,
+          supplier_id = ?, purchase_price = ?, selling_price = ?, wholesale_price = ?,
+          tax_rate = ?, min_stock_level = ?, dead_stock_days = ?, image_url = ?, status = ?, is_simple = ?,
+          season = ?, collection = ?, gender = ?, material = ?, attributes = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).run(
+        name,
+        description,
+        category_id || null,
+        subcategory_id || null,
+        brand_id || null,
+        supplier_id || null,
+        Number(purchase_price),
+        Number(selling_price),
+        Number(wholesale_price),
+        Number(tax_rate),
+        Number(min_stock_level),
+        Number(dead_stock_days) || 60,
+        image_url || null,
+        status,
+        Number(is_simple) ? 1 : 0,
+        season || null,
+        collection || null,
+        gender || null,
+        material || null,
+        serializedAttrs,
+        productId
+      );
+
+      // Multi-variant stock and parameter synchronization
+      if (variants && Array.isArray(variants) && variants.length > 0) {
+        for (const v of variants) {
+          const qty = Number(v.quantity !== undefined ? v.quantity : (v.initial_stock !== undefined ? v.initial_stock : (v.stock_quantity !== undefined ? v.stock_quantity : 0))) || 0;
+          if (v.id) {
+            db.prepare(`
+              UPDATE product_variants SET
+                sku = COALESCE(?, sku),
+                barcode = ?,
+                size = COALESCE(?, size),
+                color = COALESCE(?, color),
+                color_code = ?,
+                variant_name = ?,
+                purchase_price = COALESCE(?, purchase_price),
+                selling_price = COALESCE(?, selling_price)
+              WHERE id = ?
+            `).run(
+              v.sku || null,
+              v.barcode || null,
+              v.size || null,
+              v.color || null,
+              v.color_code || '#1A1A1A',
+              v.variant_name || `${v.size || 'One Size'} · ${v.color || 'Standard'}`,
+              v.purchase_price !== undefined ? Number(v.purchase_price) : null,
+              v.selling_price !== undefined ? Number(v.selling_price) : null,
+              v.id
+            );
+
+            const inv = db.prepare('SELECT id, quantity FROM inventory WHERE variant_id = ?').get(v.id) as any;
+            if (inv) {
+              const prevQty = Number(inv.quantity || 0);
+              if (v.quantity !== undefined || v.initial_stock !== undefined || v.stock_quantity !== undefined) {
+                if (prevQty !== qty) {
+                  db.prepare('UPDATE inventory SET quantity = ?, updated_at = CURRENT_TIMESTAMP WHERE variant_id = ?').run(qty, v.id);
+                  db.prepare(`
+                    INSERT INTO inventory_movements (id, variant_id, previous_quantity, quantity_changed, new_quantity, movement_type, reason, reference_id, user_id)
+                    VALUES (?, ?, ?, ?, ?, 'adjustment', 'Product catalog sync', ?, ?)
+                  `).run(generateId('mov'), v.id, prevQty, qty - prevQty, qty, `EDIT-${productId}`, user.id);
+                }
+              }
+            } else {
+              db.prepare('INSERT INTO inventory (id, variant_id, quantity, location, min_threshold) VALUES (?, ?, ?, "Main Storefront", ?)').run(
+                `inv_${v.id}`,
+                v.id,
+                qty,
+                Number(min_stock_level) || 3
+              );
+            }
+          } else {
+            const newVarId = generateId('v');
+            const cleanPrefix = (name || existing.name).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4) || 'AUR';
+            const sku = (v.sku && v.sku.trim()) ? v.sku.trim() : `${cleanPrefix}-${(v.size || 'OS').replace(/[^a-zA-Z0-9]/g, '')}-${(v.color || 'CLR').substring(0, 3).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
+            const barcode = (v.barcode && v.barcode.trim()) ? v.barcode.trim() : `${Math.floor(100000000000 + Math.random() * 900000000000)}`;
+
+            db.prepare(`
+              INSERT INTO product_variants (id, product_id, sku, barcode, size, color, color_code, variant_name, attributes, purchase_price, selling_price)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `).run(
+              newVarId,
+              productId,
+              sku,
+              barcode,
+              v.size || 'Standard',
+              v.color || 'Standard',
+              v.color_code || '#1A1A1A',
+              v.variant_name || `${v.size || 'One Size'} · ${v.color || 'Standard'}`,
+              null,
+              Number(v.purchase_price || purchase_price) || 0,
+              Number(v.selling_price || selling_price) || 0
+            );
+
+            db.prepare('INSERT INTO inventory (id, variant_id, quantity, location, min_threshold) VALUES (?, ?, ?, "Main Storefront", ?)').run(
+              `inv_${newVarId}`,
+              newVarId,
+              qty,
+              Number(min_stock_level) || 3
+            );
+
+            if (qty > 0) {
+              db.prepare(`
+                INSERT INTO inventory_movements (id, variant_id, previous_quantity, quantity_changed, new_quantity, movement_type, reason, reference_id, user_id)
+                VALUES (?, ?, 0, ?, ?, 'received', 'Variant added in product catalog', ?, ?)
+              `).run(generateId('mov'), newVarId, qty, qty, `ADD-${productId}`, user.id);
+            }
+          }
+        }
+      } else if (Number(is_simple) === 1 && ((body as any).initial_stock !== undefined || (body as any).quantity !== undefined)) {
+        const simpleQty = Number((body as any).initial_stock !== undefined ? (body as any).initial_stock : (body as any).quantity) || 0;
+        const firstVar = db.prepare('SELECT id FROM product_variants WHERE product_id = ? LIMIT 1').get(productId) as any;
+        if (firstVar) {
+          const inv = db.prepare('SELECT id, quantity FROM inventory WHERE variant_id = ?').get(firstVar.id) as any;
+          if (inv) {
+            const prevQty = Number(inv.quantity || 0);
+            if (prevQty !== simpleQty) {
+              db.prepare('UPDATE inventory SET quantity = ?, updated_at = CURRENT_TIMESTAMP WHERE variant_id = ?').run(simpleQty, firstVar.id);
+              db.prepare(`
+                INSERT INTO inventory_movements (id, variant_id, previous_quantity, quantity_changed, new_quantity, movement_type, reason, reference_id, user_id)
+                VALUES (?, ?, ?, ?, ?, 'adjustment', 'Simple stock count update', ?, ?)
+              `).run(generateId('mov'), firstVar.id, prevQty, simpleQty - prevQty, simpleQty, `EDIT-${productId}`, user.id);
+            }
+          } else {
+            db.prepare('INSERT INTO inventory (id, variant_id, quantity, location, min_threshold) VALUES (?, ?, ?, "Main Storefront", ?)').run(
+              `inv_${firstVar.id}`,
+              firstVar.id,
+              simpleQty,
+              Number(min_stock_level) || 3
+            );
+          }
+        }
+      }
+    });
 
     auditService.log(user.id, 'UPDATE_PRODUCT', 'PRODUCT', productId, { name });
 

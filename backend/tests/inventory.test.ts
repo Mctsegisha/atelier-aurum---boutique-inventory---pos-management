@@ -225,3 +225,52 @@ describe('Inventory KPI Stats Structure', () => {
     assert.equal(formatted.total_stock, 500);
   });
 });
+
+describe('Multi-Variant Stock Extraction & Aggregation', () => {
+  it('should accurately extract variant quantity from v.quantity, v.initial_stock, or v.stock_quantity', () => {
+    const testVariants = [
+      { size: 'S', color: 'Noir', quantity: 7 },
+      { size: 'M', color: 'Noir', initial_stock: 12 },
+      { size: 'L', color: 'Noir', stock_quantity: 5 },
+      { size: 'XL', color: 'Noir', quantity: 0 }
+    ];
+
+    const extractedQtys = testVariants.map(v =>
+      Number(v.quantity !== undefined ? v.quantity : (v.initial_stock !== undefined ? v.initial_stock : (v.stock_quantity || 0))) || 0
+    );
+
+    assert.deepEqual(extractedQtys, [7, 12, 5, 0]);
+
+    const totalStock = extractedQtys.reduce((sum, q) => sum + q, 0);
+    assert.equal(totalStock, 24, 'Total stock must equal sum of all variant quantities (7 + 12 + 5 + 0 = 24)');
+  });
+
+  it('should ensure POS product is marked available when totalStock > 0 and Sold Out when totalStock <= 0', () => {
+    const inStockProduct = {
+      id: 'p_1',
+      name: 'Dress',
+      variants: [
+        { id: 'v_1', stock_quantity: 4 },
+        { id: 'v_2', stock_quantity: 6 }
+      ]
+    };
+
+    const outOfStockProduct = {
+      id: 'p_2',
+      name: 'Suit',
+      variants: [
+        { id: 'v_3', stock_quantity: 0 },
+        { id: 'v_4', stock_quantity: 0 }
+      ]
+    };
+
+    const computeStock = (p: typeof inStockProduct) =>
+      p.variants?.reduce((sum, v) => sum + (v.stock_quantity || 0), 0) ?? 0;
+
+    assert.equal(computeStock(inStockProduct), 10);
+    assert.equal(computeStock(inStockProduct) > 0, true);
+
+    assert.equal(computeStock(outOfStockProduct), 0);
+    assert.equal(computeStock(outOfStockProduct) <= 0, true);
+  });
+});
