@@ -1,7 +1,8 @@
 import { db } from '../../database/connection.js';
+import { reportsRepository } from '../reports/reports.repository.js';
 
 export class InventoryRepository {
-  public getAll(filters: { lowStockOnly?: boolean; search?: string; isCashier?: boolean }) {
+  public getAll(filters: { lowStockOnly?: boolean; search?: string; categoryId?: string; status?: string; isCashier?: boolean }) {
     let sql = `
       SELECT
         i.id as inventory_id,
@@ -23,6 +24,10 @@ export class InventoryRepository {
         p.image_url,
         p.status as product_status,
         p.is_simple,
+        p.min_stock_level,
+        p.purchase_price as product_purchase_price,
+        p.selling_price as product_selling_price,
+        p.category_id,
         c.name as category_name,
         sc.name as subcategory_name,
         b.name as brand_name
@@ -40,6 +45,16 @@ export class InventoryRepository {
       sql += ` AND i.quantity <= i.min_threshold`;
     }
 
+    if (filters.categoryId && filters.categoryId !== 'all') {
+      sql += ` AND p.category_id = ?`;
+      params.push(filters.categoryId);
+    }
+
+    if (filters.status && filters.status !== 'all') {
+      sql += ` AND p.status = ?`;
+      params.push(filters.status);
+    }
+
     if (filters.search) {
       sql += ` AND (p.name LIKE ? OR pv.sku LIKE ? OR pv.barcode LIKE ? OR pv.variant_name LIKE ? OR c.name LIKE ? OR sc.name LIKE ?)`;
       const term = `%${filters.search}%`;
@@ -51,6 +66,23 @@ export class InventoryRepository {
     return db.prepare(sql).all(...params);
   }
 
+  public getKPIStats() {
+    const general = reportsRepository.getGeneralStats();
+    return {
+      total_products: general.totalProducts,
+      total_value: general.inventoryRetailValue,
+      total_cost_value: general.inventoryCostValue,
+      low_stock_count: general.lowStockCount,
+      slow_moving_count: general.slowMovingCount,
+      total_stock: general.totalStock,
+      total_variants: general.totalVariants
+    };
+  }
+
+  public getSlowMovingStock() {
+    return reportsRepository.getSlowMovingStock();
+  }
+
   public getVariantInfo(variantId: string) {
     return db.prepare(`
       SELECT pv.*, p.name, p.status as product_status, i.quantity as stock_quantity, i.min_threshold
@@ -59,6 +91,27 @@ export class InventoryRepository {
       LEFT JOIN inventory i ON pv.id = i.variant_id
       WHERE pv.id = ?
     `).get(variantId) as any;
+  }
+
+  public updateVariantDetails(variantId: string, data: { sku?: string; barcode?: string; size?: string; color?: string; selling_price?: number; purchase_price?: number }) {
+    const fields: string[] = [];
+    const values: any[] = [];
+
+    if (data.sku !== undefined) { fields.push('sku = ?'); values.push(data.sku); }
+    if (data.barcode !== undefined) { fields.push('barcode = ?'); values.push(data.barcode); }
+    if (data.size !== undefined) { fields.push('size = ?'); values.push(data.size); }
+    if (data.color !== undefined) { fields.push('color = ?'); values.push(data.color); }
+    if (data.selling_price !== undefined) { fields.push('selling_price = ?'); values.push(data.selling_price); }
+    if (data.purchase_price !== undefined) { fields.push('purchase_price = ?'); values.push(data.purchase_price); }
+
+    if (fields.length > 0) {
+      values.push(variantId);
+      db.prepare(`UPDATE product_variants SET ${fields.join(', ')} WHERE id = ?`).run(...values);
+    }
+  }
+
+  public updateMinThreshold(variantId: string, minThreshold: number) {
+    db.prepare('UPDATE inventory SET min_threshold = ? WHERE variant_id = ?').run(minThreshold, variantId);
   }
 
   public updateStock(variantId: string, finalQty: number) {

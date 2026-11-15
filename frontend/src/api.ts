@@ -1,4 +1,4 @@
-import { User, Product, Category, Subcategory, Brand, InventoryItem, InventoryMovement, Customer, Sale, Supplier, PurchaseOrder, Expense, BusinessSettings, Notification, AuditLog } from './types.ts';
+import { User, Product, Category, Subcategory, Brand, InventoryItem, InventoryMovement, Customer, Sale, Supplier, PurchaseOrder, Expense, BusinessSettings, Notification, AuditLog, ParentInventoryProduct, InventoryStats, SlowMovingInventoryItem } from './types.ts';
 
 const TOKEN_KEY = 'aurum_jwt_token';
 
@@ -206,13 +206,20 @@ export const api = {
     request<Brand>('/api/products/brands', { method: 'POST', body: JSON.stringify(data) }),
 
   // Inventory
-  getInventory: (params?: { lowStockOnly?: boolean; search?: string }) => {
+  getInventory: (params?: { lowStockOnly?: boolean; search?: string; categoryId?: string; status?: string; grouped?: boolean }) => {
     const query = new URLSearchParams(params as any).toString();
-    return request<InventoryItem[]>(`/api/inventory${query ? `?${query}` : ''}`);
+    return request<ParentInventoryProduct[]>(`/api/inventory${query ? `?${query}` : ''}`);
   },
 
-  adjustInventory: (data: { variant_id: string; new_quantity?: number; quantity_change?: number; type?: string; reason: string }) =>
+  getInventoryStats: () => request<InventoryStats>('/api/inventory/stats'),
+
+  getSlowMovingInventory: () => request<SlowMovingInventoryItem[]>('/api/inventory/slow-moving'),
+
+  adjustInventory: (data: { variant_id: string; new_quantity?: number; quantity?: number; adjustment_type?: string; type?: string; reason: string; reference_id?: string }) =>
     request<any>('/api/inventory/adjust', { method: 'POST', body: JSON.stringify(data) }),
+
+  updateInventoryVariant: (variantId: string, data: { sku?: string; barcode?: string; size?: string; color?: string; selling_price?: number; purchase_price?: number; min_threshold?: number }) =>
+    request<any>(`/api/inventory/variant/${variantId}`, { method: 'PATCH', body: JSON.stringify(data) }),
 
   receiveInventory: (data: { po_number?: string; notes?: string; items: { variant_id: string; quantity_received: number }[] }) =>
     request<any>('/api/inventory/receive', { method: 'POST', body: JSON.stringify(data) }),

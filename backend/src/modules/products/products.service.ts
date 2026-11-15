@@ -123,7 +123,8 @@ export class ProductsService {
     const approvedAt = isStorePerson ? null : new Date().toISOString();
 
     const productId = generateId('p');
-    const slug = `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Math.random().toString(36).slice(2, 5)}`;
+    const baseSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'product';
+    const slug = `${baseSlug}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
     const serializedAttrs = attributes ? (typeof attributes === 'string' ? attributes : JSON.stringify(attributes)) : null;
 
     this.repo.executeTransaction(() => {
@@ -181,8 +182,8 @@ export class ProductsService {
 
       if (Number(is_simple) === 1 || variants.length === 0) {
         const variantId = generateId('v');
-        const sku = customSku || `${cleanPrefix}-${Math.floor(1000 + Math.random() * 9000)}`;
-        const barcode = customBarcode || `${Math.floor(100000000000 + Math.random() * 900000000000)}`;
+        const sku = (customSku && customSku.trim()) ? customSku.trim() : `${cleanPrefix}-${Math.floor(1000 + Math.random() * 9000)}`;
+        const barcode = (customBarcode && customBarcode.trim()) ? customBarcode.trim() : `${Math.floor(100000000000 + Math.random() * 900000000000)}`;
         const qty = Number(initial_stock) || 0;
 
         insertVarStmt.run(
@@ -207,8 +208,8 @@ export class ProductsService {
       } else {
         for (const v of variants) {
           const variantId = generateId('v');
-          const sku = v.sku || `${cleanPrefix}-${(v.size || 'OS').replace(/[^a-zA-Z0-9]/g, '')}-${(v.color || 'CLR').substring(0, 3).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
-          const barcode = v.barcode || `${Math.floor(100000000000 + Math.random() * 900000000000)}`;
+          const sku = (v.sku && v.sku.trim()) ? v.sku.trim() : `${cleanPrefix}-${(v.size || 'OS').replace(/[^a-zA-Z0-9]/g, '')}-${(v.color || 'CLR').substring(0, 3).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
+          const barcode = (v.barcode && v.barcode.trim()) ? v.barcode.trim() : `${Math.floor(100000000000 + Math.random() * 900000000000)}`;
           const vAttrs = v.attributes ? (typeof v.attributes === 'string' ? v.attributes : JSON.stringify(v.attributes)) : null;
 
           insertVarStmt.run(

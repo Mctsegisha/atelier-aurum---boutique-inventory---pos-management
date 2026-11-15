@@ -214,6 +214,66 @@ export interface InventoryItem {
   updated_at: string;
 }
 
+export interface InventoryBatch {
+  batch_number: string;
+  variant_id: string;
+  inventory_id: string;
+  product_id: string;
+  sku: string;
+  barcode?: string;
+  size: string;
+  color: string;
+  color_code?: string | null;
+  variant_name: string;
+  quantity: number;
+  cost_price: number;
+  selling_price: number;
+  min_threshold: number;
+  location: string;
+  updated_at: string;
+}
+
+export interface ParentInventoryProduct {
+  product_id: string;
+  product_name: string;
+  category_id?: string;
+  category_name: string;
+  subcategory_name?: string;
+  brand_name?: string;
+  image_url?: string | null;
+  is_simple: boolean;
+  product_status: string;
+  quantity: number;
+  total_quantity: number;
+  min_threshold: number;
+  cost_price: number;
+  selling_price: number;
+  status: 'low_stock' | 'healthy';
+  batch_count: number;
+  batch_number: string;
+  batches: InventoryBatch[];
+}
+
+export interface InventoryStats {
+  total_products: number;
+  total_value: number;
+  total_cost_value: number;
+  low_stock_count: number;
+  slow_moving_count: number;
+  total_stock: number;
+  total_variants: number;
+}
+
+export interface SlowMovingInventoryItem {
+  product_id: string;
+  product_name: string;
+  image_url?: string;
+  category: string;
+  stock_quantity: number;
+  selling_price: number;
+  units_sold: number;
+}
+
 export interface InventoryMovement {
   id: string;
   variant_id: string;

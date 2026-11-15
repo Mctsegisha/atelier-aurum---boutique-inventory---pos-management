@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '../context/AuthContext.tsx';
 import { api } from '../api.ts';
 import { Product, Category, Subcategory, Brand, Supplier, Variant } from '../types.ts';
@@ -29,7 +29,8 @@ import {
   Tag,
   Eye,
   SlidersHorizontal,
-  RefreshCw
+  RefreshCw,
+  Copy
 } from 'lucide-react';
 
 interface VariantFormRow {
@@ -93,6 +94,11 @@ export function ProductsView() {
   const [formSimpleSku, setFormSimpleSku] = useState<string>('');
   const [formSimpleBarcode, setFormSimpleBarcode] = useState<string>('');
   const [formBarcode, setFormBarcode] = useState<string>('');
+
+  // Autocomplete Search & Non-Destructive Clone State
+  const [showTitleSuggestions, setShowTitleSuggestions] = useState<boolean>(false);
+  const [clonedFromInfo, setClonedFromInfo] = useState<{ id: string; name: string } | null>(null);
+  const titleAutocompleteRef = useRef<HTMLDivElement>(null);
 
   // Dynamic Attributes & Custom Attributes
   const [dynamicAttributes, setDynamicAttributes] = useState<Record<string, string>>({});
@@ -169,6 +175,83 @@ export function ProductsView() {
     return subcategories.filter(s => s.category_id === formCatId && s.is_active !== 0);
   }, [formCatId, subcategories]);
 
+  // Close title autocomplete suggestions on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (titleAutocompleteRef.current && !titleAutocompleteRef.current.contains(e.target as Node)) {
+        setShowTitleSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Filter existing catalog products for searchable title autocomplete
+  const matchingProducts = useMemo(() => {
+    if (!formName || !formName.trim() || editingProductId) return [];
+    const query = formName.toLowerCase().trim();
+    return products
+      .filter(p =>
+        p.name.toLowerCase().includes(query) ||
+        (p.category_name && p.category_name.toLowerCase().includes(query)) ||
+        (p.subcategory_name && p.subcategory_name.toLowerCase().includes(query)) ||
+        (p.variants && p.variants.some(v => (v.sku && v.sku.toLowerCase().includes(query)) || (v.barcode && v.barcode.includes(query))))
+      )
+      .slice(0, 8);
+  }, [formName, products, editingProductId]);
+
+  // Non-destructive autofill / clone from existing catalog item
+  const handleAutofillFromExisting = (p: Product) => {
+    // Keep editingProductId null so submission registers a brand-new entry/batch!
+    setEditingProductId(null);
+    setClonedFromInfo({ id: p.id, name: p.name });
+
+    setFormName(p.name);
+    setFormDesc(p.description || '');
+    setFormCatId(p.category_id || categories[0]?.id || '');
+    setFormSubcatId(p.subcategory_id || '');
+    setFormBrandId(p.brand_id || '');
+    setFormSupplierId(p.supplier_id || '');
+    setFormSellingPrice(Number(p.selling_price) || 0);
+    setFormPurchasePrice(Number(p.purchase_price) || 0);
+    setFormWholesalePrice(Number(p.wholesale_price) || 0);
+    setFormTaxRate(p.tax_rate !== undefined && p.tax_rate !== null ? Number(p.tax_rate) : 0.15);
+    setFormMinStock(p.min_stock_level || 3);
+    setFormDeadStockDays((p as any).dead_stock_days || 60);
+    setFormImageUrl(p.image_url || '');
+    setFormStatus('active');
+    setFormIsSimple(Boolean(p.is_simple));
+
+    if (p.is_simple) {
+      setFormSimpleStock(0);
+      setFormSimpleSku('');
+      setFormSimpleBarcode('');
+      setFormBarcode(p.barcode || '');
+    } else {
+      if (p.variants && p.variants.length > 0) {
+        setVariantsList(
+          p.variants.map(v => ({
+            id: undefined, // fresh variant for new product
+            size: v.size || 'One Size',
+            color: v.color || 'Standard',
+            color_code: v.color_code || '#B89B65',
+            variant_name: v.variant_name || `${v.size} · ${v.color}`,
+            sku: '',
+            barcode: v.barcode || '',
+            purchase_price: v.purchase_price !== undefined ? Number(v.purchase_price) : Number(p.purchase_price) || 0,
+            selling_price: v.selling_price !== undefined ? Number(v.selling_price) : Number(p.selling_price) || 0,
+            quantity: 0
+          }))
+        );
+      } else {
+        setVariantsList([
+          { size: 'M', color: 'Champagne Gold', color_code: '#B89B65', quantity: 0 }
+        ]);
+      }
+    }
+    setShowTitleSuggestions(false);
+  };
+
   // When form category changes, adjust subcategory and attributes defaults
   const handleCategoryChange = (newCatId: string) => {
     setFormCatId(newCatId);
@@ -197,12 +280,14 @@ export function ProductsView() {
 
   const handleOpenAddModal = () => {
     setEditingProductId(null);
+    setClonedFromInfo(null);
+    setShowTitleSuggestions(false);
     setFormName('');
     setFormDesc('');
     const firstCat = categories[0]?.id || 'cat_clothing';
     handleCategoryChange(firstCat);
-    setFormBrandId(brands[0]?.id || '');
-    setFormSupplierId(suppliers[0]?.id || '');
+    setFormBrandId('');
+    setFormSupplierId('');
     setFormPurchasePrice(120);
     setFormSellingPrice(295);
     setFormWholesalePrice(210);
@@ -223,6 +308,8 @@ export function ProductsView() {
 
   const handleOpenEditModal = (product: Product) => {
     setEditingProductId(product.id);
+    setClonedFromInfo(null);
+    setShowTitleSuggestions(false);
     setFormName(product.name);
     setFormDesc(product.description || '');
     setFormCatId(product.category_id || categories[0]?.id || '');
@@ -317,21 +404,13 @@ export function ProductsView() {
     setIsSubmitting(true);
     setFormError(null);
 
-    // Merge dynamic category attributes with custom attributes
-    const finalAttributes: Record<string, any> = { ...dynamicAttributes };
-    customAttributesList.forEach(item => {
-      if (item.key.trim()) {
-        finalAttributes[item.key.trim()] = item.value;
-      }
-    });
-
     const payload = {
       name: formName.trim(),
       description: formDesc.trim(),
       category_id: formCatId || null,
       subcategory_id: formSubcatId || null,
-      brand_id: formBrandId || null,
-      supplier_id: formSupplierId || null,
+      brand_id: null,
+      supplier_id: null,
       purchase_price: Number(formPurchasePrice) || 0,
       selling_price: Number(formSellingPrice),
       wholesale_price: Number(formWholesalePrice) || 0,
@@ -341,7 +420,7 @@ export function ProductsView() {
       image_url: formImageUrl.trim(),
       status: formStatus,
       is_simple: formIsSimple ? 1 : 0,
-      attributes: finalAttributes,
+      attributes: null,
       // If simple product: pass single stock quantity, sku and barcode
       initial_stock: formIsSimple ? Number(formSimpleStock) : undefined,
       sku: formIsSimple ? formSimpleSku : undefined,
@@ -349,7 +428,7 @@ export function ProductsView() {
       // If multi-variant:
       variants: !formIsSimple
         ? variantsList.map(v => ({
-            id: v.id,
+            id: editingProductId ? v.id : undefined,
             size: v.size || 'One Size',
             color: v.color || 'Standard',
             color_code: v.color_code || '#B89B65',
@@ -1091,6 +1170,33 @@ export function ProductsView() {
                 </div>
               )}
 
+              {/* Non-Destructive Autofill / Clone Info Banner */}
+              {clonedFromInfo && !editingProductId && (
+                <div className="p-3.5 bg-[#FAF8F5] border border-[#B89B65]/40 rounded-xl flex items-center justify-between text-xs text-[#1A1A1A] shadow-xs animate-in fade-in">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-[#FAF0D7] border border-[#E8CE8B] flex items-center justify-center shrink-0 text-[#8C733E]">
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-[#8C733E] flex items-center gap-1.5">
+                        <span>Non-Destructive Batch Creation</span>
+                        <span className="text-[10px] bg-[#B89B65] text-white px-1.5 py-0.2 rounded font-normal">Autofilled</span>
+                      </div>
+                      <p className="text-[11px] text-[#716D66] mt-0.5">
+                        Autofilled from existing article <strong className="text-[#1A1A1A]">"{clonedFromInfo.name}"</strong>. Modify pricing or stock below — submitting will register a <strong>new catalog record / batch</strong> without altering the original product.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setClonedFromInfo(null)}
+                    className="text-[#8C8275] hover:text-[#1A1A1A] text-xs px-2 py-1 rounded hover:bg-[#EFECE6] transition-colors cursor-pointer shrink-0 ml-2"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              )}
+
               {/* Store Person Workflow Callout */}
               {role === 'store_person' && !editingProductId && (
                 <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-start gap-3">
@@ -1188,18 +1294,92 @@ export function ProductsView() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="md:col-span-2">
-                    <label className="block text-xs font-medium text-[#1A1A1A] mb-1">
-                      Product Title / Model Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g., The Seraphine Silk Slip Gown or Saint-Honoré Satin Pointed Pumps"
-                      value={formName}
-                      onChange={e => setFormName(e.target.value)}
-                      className="w-full p-2 bg-[#F9F8F6] border border-[#E5E0D8] rounded-lg text-xs text-[#1A1A1A] focus:outline-none focus:border-[#B89B65]"
-                    />
+                  <div className="md:col-span-2 relative" ref={titleAutocompleteRef}>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs font-medium text-[#1A1A1A]">
+                        Product Title / Model Name <span className="text-red-500">*</span>
+                      </label>
+                      {!editingProductId && (
+                        <span className="text-[10px] text-[#8C733E] font-medium flex items-center gap-1">
+                          <Search className="w-3 h-3 text-[#B89B65]" />
+                          Type to search & clone existing item
+                        </span>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g., Ethiopian Silk Chiffon Dress or search existing product..."
+                        value={formName}
+                        onChange={e => {
+                          setFormName(e.target.value);
+                          setShowTitleSuggestions(true);
+                        }}
+                        onFocus={() => {
+                          if (!editingProductId && formName.trim().length > 0) {
+                            setShowTitleSuggestions(true);
+                          }
+                        }}
+                        className="w-full p-2 pr-8 bg-[#F9F8F6] border border-[#E5E0D8] rounded-lg text-xs text-[#1A1A1A] focus:outline-none focus:border-[#B89B65]"
+                      />
+                      {!editingProductId && (
+                        <div className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8C8275]">
+                          <Search className="w-3.5 h-3.5" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Searchable Autocomplete Dropdown */}
+                    {showTitleSuggestions && !editingProductId && matchingProducts.length > 0 && (
+                      <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-[#E5E0D8] rounded-xl shadow-xl z-50 overflow-hidden max-h-72 overflow-y-auto divide-y divide-[#F0EDE8] animate-in fade-in duration-100">
+                        <div className="p-2 bg-[#F9F8F6] text-[10px] font-semibold text-[#8C8275] uppercase tracking-wider flex items-center justify-between">
+                          <span className="flex items-center gap-1.5">
+                            <Sparkles className="w-3 h-3 text-[#B89B65]" />
+                            Matching Products in Catalog (Click to Clone Batch)
+                          </span>
+                          <span className="text-[10px] text-[#B89B65] font-normal">Non-Destructive Autofill</span>
+                        </div>
+                        {matchingProducts.map(p => (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => handleAutofillFromExisting(p)}
+                            className="w-full p-2.5 flex items-center justify-between text-left hover:bg-[#FAF8F5] transition-colors cursor-pointer group"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-8 h-8 rounded-md bg-[#F0EDE8] overflow-hidden shrink-0 border border-[#E5E0D8] flex items-center justify-center">
+                                {p.image_url ? (
+                                  <img src={p.image_url} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                  <Package className="w-3.5 h-3.5 text-[#8C8275]" />
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <div className="text-xs font-semibold text-[#1A1A1A] group-hover:text-[#B89B65] transition-colors truncate">
+                                  {p.name}
+                                </div>
+                                <div className="text-[10px] text-[#716D66] flex items-center gap-2 mt-0.5">
+                                  <span className="bg-[#EFECE6] px-1.5 py-0.2 rounded font-medium">
+                                    {p.category_name || 'Catalog Item'}
+                                  </span>
+                                  {p.subcategory_name && <span>· {p.subcategory_name}</span>}
+                                  <span>· Stock: {p.total_stock || 0} units</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-right shrink-0 ml-3">
+                              <div className="text-xs font-semibold text-[#1A1A1A]">
+                                {formatCurrency(p.selling_price)}
+                              </div>
+                              <span className="text-[10px] text-[#B89B65] group-hover:underline flex items-center gap-0.5 justify-end">
+                                Autofill Batch ↳
+                              </span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div>
@@ -1221,40 +1401,6 @@ export function ProductsView() {
                         <option value="archived">Archived</option>
                       </select>
                     )}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-[#1A1A1A] mb-1">Designer House / Brand</label>
-                    <select
-                      value={formBrandId}
-                      onChange={e => setFormBrandId(e.target.value)}
-                      className="w-full p-2 bg-[#F9F8F6] border border-[#E5E0D8] rounded-lg text-xs text-[#1A1A1A] focus:outline-none focus:border-[#B89B65]"
-                    >
-                      <option value="">No Designer Specified</option>
-                      {brands.map(b => (
-                        <option key={b.id} value={b.id}>
-                          {b.name} ({b.country || 'Global'})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-[#1A1A1A] mb-1">Primary Supplier / Artisan</label>
-                    <select
-                      value={formSupplierId}
-                      onChange={e => setFormSupplierId(e.target.value)}
-                      className="w-full p-2 bg-[#F9F8F6] border border-[#E5E0D8] rounded-lg text-xs text-[#1A1A1A] focus:outline-none focus:border-[#B89B65]"
-                    >
-                      <option value="">No Supplier Assigned</option>
-                      {suppliers.map(s => (
-                        <option key={s.id} value={s.id}>
-                          {s.company_name} ({s.contact_person || 'Representative'})
-                        </option>
-                      ))}
-                    </select>
                   </div>
                 </div>
 
@@ -1368,111 +1514,12 @@ export function ProductsView() {
                 </div>
               </div>
 
-              {/* Section 3: Dynamic Category-Specific Attributes */}
+              {/* Section 3: Variants & Stock Allocation */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b border-[#EFECE6] pb-2">
                   <h4 className="text-xs font-semibold text-[#1A1A1A] uppercase tracking-wider flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-[#B89B65]" />
-                    3. Dynamic Category Attributes ({activeCategoryConfig?.name || 'Category Specific'})
-                  </h4>
-                  <button
-                    type="button"
-                    onClick={handleAddCustomAttribute}
-                    className="text-[11px] text-[#B89B65] hover:underline flex items-center gap-1 cursor-pointer"
-                  >
-                    <Plus className="w-3 h-3" />
-                    <span>Add Custom Specification</span>
-                  </button>
-                </div>
-
-                {activeCategoryConfig ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-[#F9F8F6] p-4 rounded-xl border border-[#E5E0D8]">
-                    {activeCategoryConfig.attributeSchema.map(field => (
-                      <div key={field.key}>
-                        <label className="block text-xs font-medium text-[#1A1A1A] mb-1">
-                          {field.label}
-                        </label>
-                        {field.type === 'select' && field.options ? (
-                          <select
-                            value={dynamicAttributes[field.key] || field.options[0]}
-                            onChange={e =>
-                              setDynamicAttributes(prev => ({ ...prev, [field.key]: e.target.value }))
-                            }
-                            className="w-full p-2 bg-white border border-[#E5E0D8] rounded-lg text-xs text-[#1A1A1A] focus:outline-none focus:border-[#B89B65]"
-                          >
-                            {field.options.map(opt => (
-                              <option key={opt} value={opt}>
-                                {opt}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <input
-                            type="text"
-                            placeholder={field.placeholder}
-                            value={dynamicAttributes[field.key] || ''}
-                            onChange={e =>
-                              setDynamicAttributes(prev => ({ ...prev, [field.key]: e.target.value }))
-                            }
-                            className="w-full p-2 bg-white border border-[#E5E0D8] rounded-lg text-xs text-[#1A1A1A] focus:outline-none focus:border-[#B89B65]"
-                          />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-[#716D66] italic">Select a category above to configure specifications.</p>
-                )}
-
-                {/* Custom Key-Value Pairs added dynamically */}
-                {customAttributesList.length > 0 && (
-                  <div className="space-y-2 pt-2">
-                    <span className="text-[11px] font-semibold text-[#716D66] uppercase">Custom Specifications:</span>
-                    {customAttributesList.map((item, idx) => (
-                      <div key={idx} className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          placeholder="Specification Name (e.g. Waterproof Rating)"
-                          value={item.key}
-                          onChange={e => {
-                            const val = e.target.value;
-                            setCustomAttributesList(prev =>
-                              prev.map((it, i) => (i === idx ? { ...it, key: val } : it))
-                            );
-                          }}
-                          className="flex-1 p-2 bg-[#F9F8F6] border border-[#E5E0D8] rounded-lg text-xs"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Value (e.g. 50M Water Resistant)"
-                          value={item.value}
-                          onChange={e => {
-                            const val = e.target.value;
-                            setCustomAttributesList(prev =>
-                              prev.map((it, i) => (i === idx ? { ...it, value: val } : it))
-                            );
-                          }}
-                          className="flex-1 p-2 bg-[#F9F8F6] border border-[#E5E0D8] rounded-lg text-xs"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setCustomAttributesList(prev => prev.filter((_, i) => i !== idx))}
-                          className="p-1.5 text-red-500 hover:text-red-700 cursor-pointer"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Section 4: Variants & Stock Allocation */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between border-b border-[#EFECE6] pb-2">
-                  <h4 className="text-xs font-semibold text-[#1A1A1A] uppercase tracking-wider flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-[#B89B65]" />
-                    4. {formIsSimple ? 'Inventory & Barcode' : 'Variant Matrix & Inventory Allocation'}
+                    3. {formIsSimple ? 'Inventory & Barcode' : 'Variant Matrix & Inventory Allocation'}
                   </h4>
 
                   {!formIsSimple && (
@@ -1635,12 +1682,12 @@ export function ProductsView() {
                 )}
               </div>
 
-              {/* Section 5: Media & Image Selection */}
+              {/* Section 4: Media & Image Selection */}
               <div className="space-y-4">
                 <div className="border-b border-[#EFECE6] pb-2">
                   <h4 className="text-xs font-semibold text-[#1A1A1A] uppercase tracking-wider flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-[#B89B65]" />
-                    5. Product Imagery & Presets
+                    4. Product Imagery & Presets
                   </h4>
                 </div>
 

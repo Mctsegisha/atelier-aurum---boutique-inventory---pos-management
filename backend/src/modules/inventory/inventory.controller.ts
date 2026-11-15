@@ -14,6 +14,33 @@ export class InventoryController {
     }
   };
 
+  public getStats = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const stats = this.service.getStats();
+      res.json(stats);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  public getSlowMoving = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const items = this.service.getSlowMoving();
+      res.json(items);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  public updateVariant = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const result = this.service.updateVariant(req.user!, req.params.variantId as string, req.body);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  };
+
   public adjustStock = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const result = this.service.adjustStock(req.user!, req.body);
