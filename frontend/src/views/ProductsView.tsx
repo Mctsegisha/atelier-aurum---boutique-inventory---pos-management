@@ -498,9 +498,9 @@ export function ProductsView() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
       {/* View Header & Action Bar */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-[#E5E0D8] pb-5">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-[#E5E0D8] pb-6">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="font-sans text-2xl font-bold tracking-tight text-[#1A1A1A]">Product Management</h1>
