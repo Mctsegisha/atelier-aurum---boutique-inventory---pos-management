@@ -31,7 +31,8 @@ export class ReportsService {
 
     const grossProfit = Math.max(0, netSales - totalCogs);
     const netProfit = grossProfit - totalExpenses;
-    const grossMarginPercent = netSales > 0 ? Math.round((grossProfit / netSales) * 100 * 10) / 10 : 0;
+    const marginBase = netSales > 0 ? netSales : salesSummary.total_revenue;
+    const grossMarginPercent = marginBase > 0 ? Math.round((grossProfit / marginBase) * 100) : 0;
 
     // 4. Breakdown Datasets
     const categoryBreakdown = this.repo.getCategoryBreakdown(dateClause);
@@ -66,6 +67,7 @@ export class ReportsService {
       total_variants: generalStats.totalVariants,
       total_products: generalStats.totalProducts,
       low_stock_count: generalStats.lowStockCount,
+      slow_moving_count: generalStats.slowMovingCount,
       inventory_retail_value: generalStats.inventoryRetailValue,
       inventory_cost_value: generalStats.inventoryCostValue
     };

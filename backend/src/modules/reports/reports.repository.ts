@@ -7,7 +7,25 @@ export interface DateFilterClause {
 
 export class ReportsRepository {
   public buildDateClause(period: string, startDate?: string, endDate?: string, tableAlias = 's'): DateFilterClause {
-    if (period === 'today') {
+    if (startDate && endDate) {
+      return {
+        sql: `${tableAlias}.created_at >= ? AND ${tableAlias}.created_at <= ?`,
+        params: [`${startDate} 00:00:00`, `${endDate} 23:59:59`]
+      };
+    }
+    if (startDate && !endDate) {
+      return {
+        sql: `${tableAlias}.created_at >= ?`,
+        params: [`${startDate} 00:00:00`]
+      };
+    }
+    if (!startDate && endDate) {
+      return {
+        sql: `${tableAlias}.created_at <= ?`,
+        params: [`${endDate} 23:59:59`]
+      };
+    }
+    if (period === 'day' || period === 'today') {
       return { sql: `${tableAlias}.created_at >= CURRENT_DATE`, params: [] };
     }
     if (period === 'yesterday') {
@@ -16,27 +34,69 @@ export class ReportsRepository {
         params: []
       };
     }
-    if (period === '7d') {
-      return { sql: `${tableAlias}.created_at >= NOW() - INTERVAL '7 days'`, params: [] };
+    if (period === 'week' || period === '7d') {
+      return { sql: `${tableAlias}.created_at >= CURRENT_DATE - INTERVAL '6 days'`, params: [] };
     }
     if (period === 'month') {
-      return { sql: `to_char(${tableAlias}.created_at, 'YYYY-MM') = to_char(NOW(), 'YYYY-MM')`, params: [] };
-    }
-    if (period === 'custom' && startDate && endDate) {
-      return {
-        sql: `${tableAlias}.created_at >= ? AND ${tableAlias}.created_at <= ?`,
-        params: [`${startDate} 00:00:00`, `${endDate} 23:59:59`]
-      };
+      return { sql: `to_char(${tableAlias}.created_at, 'YYYY-MM') = to_char(CURRENT_DATE, 'YYYY-MM')`, params: [] };
     }
     // Default 30 days
     return { sql: `${tableAlias}.created_at >= NOW() - INTERVAL '30 days'`, params: [] };
   }
 
   public getGeneralStats() {
-    const totalProducts = db.prepare("SELECT COUNT(*) as count FROM products WHERE status != 'archived'").get() as { count: any };
-    const totalVariants = db.prepare("SELECT COUNT(*) as count FROM product_variants").get() as { count: any };
-    const totalStock = db.prepare("SELECT COALESCE(SUM(quantity), 0) as total FROM inventory").get() as { total: any };
-    const lowStock = db.prepare("SELECT COUNT(*) as count FROM inventory WHERE quantity <= min_threshold").get() as { count: any };
+    const totalProducts = db.prepare("SELECT COUNT(*) as count FROM products WHERE status = 'active'").get() as { count: any };
+    const totalVariants = db.prepare(`
+      SELECT COUNT(*) as count
+      FROM product_variants pv
+      JOIN products p ON pv.product_id = p.id
+      WHERE p.status = 'active'
+    `).get() as { count: any };
+    const totalStock = db.prepare(`
+      SELECT COALESCE(SUM(i.quantity), 0) as total
+      FROM inventory i
+      JOIN product_variants pv ON i.variant_id = pv.id
+      JOIN products p ON pv.product_id = p.id
+      WHERE p.status = 'active'
+    `).get() as { total: any };
+
+    // Low stock: products whose total stock <= configured min_stock_level
+    const lowStock = db.prepare(`
+      SELECT COUNT(*) as count FROM (
+        SELECT p.id
+        FROM products p
+        JOIN product_variants pv ON pv.product_id = p.id
+        LEFT JOIN inventory i ON i.variant_id = pv.id
+        WHERE p.status = 'active'
+        GROUP BY p.id, p.min_stock_level
+        HAVING COALESCE(SUM(i.quantity), 0) <= COALESCE(p.min_stock_level, 5)
+      ) q
+    `).get() as { count: any };
+
+    // Slow-moving stock: active products with inventory on hand (> 0) that have zero or low sales in the last 30 days
+    const slowMoving = db.prepare(`
+      SELECT COUNT(*) as count FROM (
+        SELECT p.id
+        FROM products p
+        JOIN product_variants pv ON pv.product_id = p.id
+        JOIN inventory inv ON inv.variant_id = pv.id
+        LEFT JOIN (
+          SELECT pv2.product_id, SUM(si.quantity) as sold_qty
+          FROM sale_items si
+          JOIN sales s ON si.sale_id = s.id
+          JOIN product_variants pv2 ON si.variant_id = pv2.id
+          WHERE s.created_at >= NOW() - INTERVAL '30 days'
+            AND s.payment_status != 'refunded'
+            AND s.payment_status != 'voided'
+            AND s.payment_status != 'cancelled'
+          GROUP BY pv2.product_id
+        ) sales_30d ON sales_30d.product_id = p.id
+        WHERE p.status = 'active'
+        GROUP BY p.id, sales_30d.sold_qty
+        HAVING COALESCE(SUM(inv.quantity), 0) > 0
+           AND (COALESCE(sales_30d.sold_qty, 0) = 0 OR (sales_30d.sold_qty <= 1 AND COALESCE(SUM(inv.quantity), 0) >= 5))
+      ) sub
+    `).get() as { count: any };
 
     const valuation = db.prepare(`
       SELECT
@@ -45,6 +105,7 @@ export class ReportsRepository {
       FROM inventory i
       JOIN product_variants pv ON i.variant_id = pv.id
       JOIN products p ON pv.product_id = p.id
+      WHERE p.status = 'active'
     `).get() as { retail_value: any; cost_value: any };
 
     return {
@@ -52,6 +113,7 @@ export class ReportsRepository {
       totalVariants: Number(totalVariants?.count || 0),
       totalStock: Number(totalStock?.total || 0),
       lowStockCount: Number(lowStock?.count || 0),
+      slowMovingCount: Number(slowMoving?.count || 0),
       inventoryRetailValue: Math.round(Number(valuation?.retail_value || 0) * 100) / 100,
       inventoryCostValue: Math.round(Number(valuation?.cost_value || 0) * 100) / 100
     };
@@ -60,11 +122,11 @@ export class ReportsRepository {
   public getSalesSummary(dateClause: DateFilterClause, cashierId?: string) {
     let sql = `
       SELECT
-        COUNT(*) as total_transactions,
-        COALESCE(SUM(s.total_amount), 0) as total_revenue,
-        COALESCE(SUM(s.subtotal), 0) as gross_sales,
-        COALESCE(SUM(s.discount_amount), 0) as total_discounts,
-        COALESCE(SUM(s.tax_amount), 0) as total_tax,
+        COUNT(CASE WHEN s.payment_status != 'voided' AND s.payment_status != 'cancelled' THEN 1 END) as total_transactions,
+        COALESCE(SUM(CASE WHEN s.payment_status != 'voided' AND s.payment_status != 'cancelled' THEN s.total_amount ELSE 0 END), 0) as total_revenue,
+        COALESCE(SUM(CASE WHEN s.payment_status != 'voided' AND s.payment_status != 'cancelled' THEN s.subtotal ELSE 0 END), 0) as gross_sales,
+        COALESCE(SUM(CASE WHEN s.payment_status != 'voided' AND s.payment_status != 'cancelled' THEN s.discount_amount ELSE 0 END), 0) as total_discounts,
+        COALESCE(SUM(CASE WHEN s.payment_status != 'voided' AND s.payment_status != 'cancelled' THEN s.tax_amount ELSE 0 END), 0) as total_tax,
         COALESCE(SUM(s.refunded_amount), 0) as total_refunds
       FROM sales s
       WHERE ${dateClause.sql}
@@ -82,8 +144,8 @@ export class ReportsRepository {
       total_revenue: Math.round(Number(row?.total_revenue || 0) * 100) / 100,
       gross_sales: Math.round(Number(row?.gross_sales || 0) * 100) / 100,
       total_discounts: Math.round(Number(row?.total_discounts || 0) * 100) / 100,
-      total_tax: Math.round(Number(row?.tax_amount ?? row?.total_tax ?? 0) * 100) / 100,
-      total_refunds: Math.round(Number(row?.refunded_amount ?? row?.total_refunds ?? 0) * 100) / 100
+      total_tax: Math.round(Number(row?.total_tax || 0) * 100) / 100,
+      total_refunds: Math.round(Number(row?.total_refunds || 0) * 100) / 100
     };
   }
 
@@ -111,10 +173,12 @@ export class ReportsRepository {
 
   public getCogsSummary(dateClause: DateFilterClause) {
     const sql = `
-      SELECT COALESCE(SUM(si.cost_price * si.quantity), 0) as total_cogs
+      SELECT COALESCE(SUM(COALESCE(NULLIF(si.cost_price, 0), pv.purchase_price, p.purchase_price, 0) * si.quantity), 0) as total_cogs
       FROM sale_items si
       JOIN sales s ON si.sale_id = s.id
-      WHERE ${dateClause.sql} AND s.payment_status != 'refunded'
+      LEFT JOIN product_variants pv ON si.variant_id = pv.id
+      LEFT JOIN products p ON pv.product_id = p.id
+      WHERE ${dateClause.sql} AND s.payment_status != 'refunded' AND s.payment_status != 'voided' AND s.payment_status != 'cancelled'
     `;
     const row = db.prepare(sql).get(...dateClause.params) as any;
     return { total_cogs: Math.round(Number(row?.total_cogs || 0) * 100) / 100 };
@@ -124,17 +188,23 @@ export class ReportsRepository {
     let expClause = '';
     const params: string[] = [];
 
-    if (period === 'today') {
+    if (startDate && endDate) {
+      expClause = `expense_date >= ? AND expense_date <= ?`;
+      params.push(startDate, endDate);
+    } else if (startDate && !endDate) {
+      expClause = `expense_date >= ?`;
+      params.push(startDate);
+    } else if (!startDate && endDate) {
+      expClause = `expense_date <= ?`;
+      params.push(endDate);
+    } else if (period === 'day' || period === 'today') {
       expClause = `expense_date::date = CURRENT_DATE`;
     } else if (period === 'yesterday') {
       expClause = `expense_date::date = CURRENT_DATE - INTERVAL '1 day'`;
-    } else if (period === '7d') {
-      expClause = `expense_date >= CURRENT_DATE - INTERVAL '7 days'`;
+    } else if (period === 'week' || period === '7d') {
+      expClause = `expense_date >= CURRENT_DATE - INTERVAL '6 days'`;
     } else if (period === 'month') {
-      expClause = `to_char(expense_date::timestamp, 'YYYY-MM') = to_char(NOW(), 'YYYY-MM')`;
-    } else if (period === 'custom' && startDate && endDate) {
-      expClause = `expense_date >= ? AND expense_date <= ?`;
-      params.push(startDate, endDate);
+      expClause = `to_char(expense_date::timestamp, 'YYYY-MM') = to_char(CURRENT_DATE, 'YYYY-MM')`;
     } else {
       expClause = `expense_date >= CURRENT_DATE - INTERVAL '30 days'`;
     }
@@ -292,7 +362,7 @@ export class ReportsRepository {
 
   /**
    * Slow-Moving Stock: products whose variants have stock above zero
-   * but zero sales in the last 60 days. Limited to top 8 by stock quantity.
+   * but zero or low sales in the last 30 days. Limited to top 10 by stock quantity.
    */
   public getSlowMovingStock() {
     const sql = `
@@ -301,25 +371,30 @@ export class ReportsRepository {
         p.name as product_name,
         p.image_url,
         COALESCE(c.name, 'Uncategorized') as category,
-        SUM(inv.quantity) as stock_quantity,
-        COALESCE(p.selling_price, 0) as selling_price
+        COALESCE(SUM(inv.quantity), 0) as stock_quantity,
+        COALESCE(p.selling_price, 0) as selling_price,
+        COALESCE(sales_30d.sold_qty, 0) as units_sold
       FROM products p
       JOIN product_variants pv ON pv.product_id = p.id
       JOIN inventory inv ON inv.variant_id = pv.id
       LEFT JOIN categories c ON p.category_id = c.id
+      LEFT JOIN (
+        SELECT pv2.product_id, SUM(si.quantity) as sold_qty
+        FROM sale_items si
+        JOIN sales s ON si.sale_id = s.id
+        JOIN product_variants pv2 ON si.variant_id = pv2.id
+        WHERE s.created_at >= NOW() - INTERVAL '30 days'
+          AND s.payment_status != 'refunded'
+          AND s.payment_status != 'voided'
+          AND s.payment_status != 'cancelled'
+        GROUP BY pv2.product_id
+      ) sales_30d ON sales_30d.product_id = p.id
       WHERE p.status = 'active'
-        AND inv.quantity > 0
-        AND p.id NOT IN (
-          SELECT DISTINCT pv2.product_id
-          FROM sale_items si
-          JOIN sales s ON si.sale_id = s.id
-          JOIN product_variants pv2 ON si.variant_id = pv2.id
-          WHERE s.created_at >= NOW() - INTERVAL '60 days'
-            AND s.payment_status != 'refunded'
-        )
-      GROUP BY p.id, p.name, p.image_url, c.name, p.selling_price
+      GROUP BY p.id, p.name, p.image_url, c.name, p.selling_price, sales_30d.sold_qty
+      HAVING COALESCE(SUM(inv.quantity), 0) > 0
+         AND (COALESCE(sales_30d.sold_qty, 0) = 0 OR (sales_30d.sold_qty <= 1 AND COALESCE(SUM(inv.quantity), 0) >= 5))
       ORDER BY stock_quantity DESC
-      LIMIT 8
+      LIMIT 10
     `;
     const rows = db.prepare(sql).all() as any[];
     return rows.map(r => ({
@@ -328,7 +403,8 @@ export class ReportsRepository {
       image_url: r.image_url,
       category: r.category,
       stock_quantity: Number(r.stock_quantity || 0),
-      selling_price: Math.round(Number(r.selling_price || 0) * 100) / 100
+      selling_price: Math.round(Number(r.selling_price || 0) * 100) / 100,
+      units_sold: Number(r.units_sold || 0)
     }));
   }
 }

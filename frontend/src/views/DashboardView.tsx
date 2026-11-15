@@ -7,6 +7,7 @@ import {
   Package,
   AlertTriangle,
   ShoppingBag,
+  ShoppingCart,
   CreditCard,
   ArrowUpRight,
   Sparkles,
@@ -36,7 +37,7 @@ interface DashboardViewProps {
 
 export function DashboardView({ onNavigate }: DashboardViewProps) {
   const { user, role } = useAuth();
-  const [period, setPeriod] = useState<string>('30d');
+  const [period, setPeriod] = useState<string>('day');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [data, setData] = useState<any>(null);
@@ -72,6 +73,12 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
     setPeriod(pId);
   };
 
+  const handleResetToday = () => {
+    setStartDate('');
+    setEndDate('');
+    setPeriod('day');
+  };
+
   const handleStartDateChange = (val: string) => {
     setStartDate(val);
     if (val && endDate) {
@@ -84,6 +91,23 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
     if (startDate && val) {
       setPeriod('custom');
     }
+  };
+
+  const getPeriodLabel = (metric: string) => {
+    if (period === 'day' || period === 'today') return `TODAY — ${metric}`;
+    if (period === 'week' || period === '7d') return `THIS WEEK — ${metric}`;
+    if (period === 'month' || period === '30d') return `THIS MONTH — ${metric}`;
+    return `PERIOD — ${metric}`;
+  };
+
+  const formatCardCurrency = (val: number | string | null | undefined): string => {
+    if (val === null || val === undefined || val === '') return 'ETB 0';
+    const num = Number(val);
+    if (isNaN(num)) return 'ETB 0';
+    return `ETB ${num.toLocaleString('en-US', {
+      minimumFractionDigits: num % 1 === 0 ? 0 : 2,
+      maximumFractionDigits: 2
+    })}`;
   };
 
   const PIE_COLORS = ['#B89B65', '#2C2B29', '#8C8275', '#D4AF37', '#6A5ACD'];
@@ -124,27 +148,29 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
 
         {/* Period Selector Tabs & Custom Date Range Filter */}
         {role !== 'sales' && (
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 self-start md:self-end">
-            {/* Presets: Today, Yesterday, Last 7 Days, Last 30 Days (Removed 'This Month') */}
-            <div className="flex items-center gap-1 p-1 bg-[#EFECE6] rounded-lg border border-[#E5E0D8]">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Presets: Day, Week, Month */}
+            <div className="inline-flex items-center p-1 bg-[#F5F4F0] rounded-lg border border-[#E5E0D8]">
               {[
-                { id: 'today', label: 'Today' },
-                { id: 'yesterday', label: 'Yesterday' },
-                { id: '7d', label: 'Last 7 Days' },
-                { id: '30d', label: 'Last 30 Days' }
-              ].map(p => (
-                <button
-                  key={p.id}
-                  onClick={() => handleSelectPreset(p.id)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap cursor-pointer ${
-                    period === p.id
-                      ? 'bg-white text-[#1A1A1A] shadow-xs'
-                      : 'text-[#59554F] hover:text-[#1A1A1A]'
-                  }`}
-                >
-                  {p.label}
-                </button>
-              ))}
+                { id: 'day', label: 'Day' },
+                { id: 'week', label: 'Week' },
+                { id: 'month', label: 'Month' }
+              ].map(p => {
+                const isActive = (period === p.id) || (p.id === 'day' && period === 'today') || (p.id === 'week' && period === '7d') || (p.id === 'month' && period === '30d');
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => handleSelectPreset(p.id)}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all cursor-pointer ${
+                      isActive
+                        ? 'bg-[#1E3E31] text-white shadow-xs'
+                        : 'text-[#59554F] hover:text-[#1A1A1A]'
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Custom Date Range Filter (mm/dd/yyyy to mm/dd/yyyy) */}
@@ -153,7 +179,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
                 type="date"
                 value={startDate}
                 onChange={e => handleStartDateChange(e.target.value)}
-                className="px-2.5 py-1.5 text-xs bg-white border border-[#E5E0D8] rounded-md text-[#1A1A1A] focus:outline-none focus:border-[#B89B65] shadow-xs cursor-pointer"
+                className="px-2.5 py-1.5 text-xs bg-white border border-[#E5E0D8] rounded-md text-[#1A1A1A] focus:outline-none focus:border-[#1E3E31] shadow-xs cursor-pointer"
                 title="Start Date"
               />
               <span className="text-xs text-[#716D66] font-normal">to</span>
@@ -161,10 +187,19 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
                 type="date"
                 value={endDate}
                 onChange={e => handleEndDateChange(e.target.value)}
-                className="px-2.5 py-1.5 text-xs bg-white border border-[#E5E0D8] rounded-md text-[#1A1A1A] focus:outline-none focus:border-[#B89B65] shadow-xs cursor-pointer"
+                className="px-2.5 py-1.5 text-xs bg-white border border-[#E5E0D8] rounded-md text-[#1A1A1A] focus:outline-none focus:border-[#1E3E31] shadow-xs cursor-pointer"
                 title="End Date"
               />
             </div>
+
+            {/* Today shortcut */}
+            <button
+              type="button"
+              onClick={handleResetToday}
+              className="px-2.5 py-1.5 text-xs font-medium text-[#59554F] hover:text-[#1E3E31] transition-colors cursor-pointer"
+            >
+              Today
+            </button>
           </div>
         )}
       </div>
@@ -175,108 +210,101 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
         </div>
       )}
 
-      {/* KPI METRIC CARDS */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
-        {/* Total Revenue */}
-        <div className="p-5 bg-white rounded-xl border border-[#E5E0D8] shadow-xs">
+      {/* 5 SUMMARY CARDS MATCHING ADMIN DASHBOARD DESIGN */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        {/* 1. Today's Revenue */}
+        <div className="p-5 bg-white rounded-xl border border-[#E5E0D8] shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-[#716D66]">
-            <span className="text-xs uppercase tracking-wider font-medium">Total Revenue</span>
-            <span className="text-xs font-bold font-mono text-[#B89B65] tracking-wider">ETB</span>
-          </div>
-          <div className="text-2xl lg:text-3xl font-serif font-semibold text-[#1A1A1A] mt-2 tabular-nums">
-            {formatCurrency(stats.total_revenue)}
-          </div>
-          <div className="text-[11px] text-[#716D66] mt-1 flex items-center gap-1">
-            <span>{stats.total_transactions || 0} sales · Incl. VAT ({formatCurrency(stats.total_tax || 0)})</span>
-          </div>
-        </div>
-
-        {/* Total Item Price (Store Manager) | Net Sales (Admin / Sales) */}
-        <div className="p-5 bg-white rounded-xl border border-[#E5E0D8] shadow-xs">
-          <div className="flex items-center justify-between text-[#716D66]">
-            <span className="text-xs uppercase tracking-wider font-medium">
-              {role === 'store_person' ? 'Total Item Price' : 'Net Sales'}
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#716D66]">
+              {getPeriodLabel('REVENUE')}
             </span>
-            <TrendingUp className="w-4 h-4 text-[#B89B65]" />
+            <ShoppingCart className="w-4 h-4 text-emerald-500 shrink-0" />
           </div>
-          <div className="text-2xl lg:text-3xl font-serif font-semibold text-[#1A1A1A] mt-2 tabular-nums">
-            {role === 'store_person'
-              ? formatCurrency(stats.total_items_price)
-              : formatCurrency(stats.net_sales)}
+          <div className="text-2xl lg:text-3xl font-serif font-semibold text-[#1A1A1A] mt-3 tabular-nums">
+            {formatCardCurrency(stats.total_revenue)}
           </div>
-          <div className="text-[11px] text-[#716D66] mt-1">
-            {role === 'store_person'
-              ? `${stats.total_items_sold || 0} items sold (before discounts & tax)`
-              : `Excl. VAT (${formatCurrency(stats.total_tax || 0)}) · After ${formatCurrency(stats.total_refunds || 0)} refunds`}
+          <div className="text-xs text-[#716D66] mt-1.5">
+            {stats.total_transactions || 0} transactions
           </div>
         </div>
 
-        {/* Gross Profit (Admin Only) or Inventory Stock (Manager/Cashier) */}
-        {role === 'admin' ? (
-          <div className="p-5 bg-white rounded-xl border border-[#E5E0D8] shadow-xs">
-            <div className="flex items-center justify-between text-[#716D66]">
-              <span className="text-xs uppercase tracking-wider font-medium">Gross Profit</span>
-              <Sparkles className="w-4 h-4 text-[#B89B65]" />
-            </div>
-            <div className="text-2xl lg:text-3xl font-serif font-semibold text-[#1A1A1A] mt-2 tabular-nums">
-              {formatCurrency(stats.gross_profit)}
-            </div>
-            <div className="text-[11px] text-[#716D66] mt-1">
-              COGS: {formatCurrency(stats.cogs)}
-            </div>
+        {/* 2. Today's Gross Profit */}
+        <div className="p-5 bg-white rounded-xl border border-[#E5E0D8] shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between text-[#716D66]">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#716D66]">
+              {getPeriodLabel('GROSS PROFIT')}
+            </span>
+            <TrendingUp className="w-4 h-4 text-emerald-500 shrink-0" />
           </div>
-        ) : (
-          <div className="p-5 bg-white rounded-xl border border-[#E5E0D8] shadow-xs">
-            <div className="flex items-center justify-between text-[#716D66]">
-              <span className="text-xs uppercase tracking-wider font-medium">Total Stock</span>
-              <Package className="w-4 h-4 text-[#B89B65]" />
-            </div>
-            <div className="text-2xl lg:text-3xl font-serif font-semibold text-[#1A1A1A] mt-2 tabular-nums">
-              {stats.total_stock || 0}
-            </div>
-            <div className="text-[11px] text-[#716D66] mt-1">
-              Across {stats.total_variants || 0} active variants
-            </div>
+          <div className="text-2xl lg:text-3xl font-serif font-semibold text-[#1A1A1A] mt-3 tabular-nums">
+            {formatCardCurrency(stats.gross_profit)}
           </div>
-        )}
+          <div className="text-xs text-[#716D66] mt-1.5">
+            {stats.gross_margin_percent || 0}% margin
+          </div>
+        </div>
 
-        {/* Net Profit (Admin Only) or Low Stock Alert */}
-        {role === 'admin' ? (
-          <div className="p-5 bg-white rounded-xl border border-[#E5E0D8] shadow-xs">
-            <div className="flex items-center justify-between text-[#716D66]">
-              <span className="text-xs uppercase tracking-wider font-medium">Net Profit</span>
-              <ArrowUpRight className="w-4 h-4 text-emerald-600" />
-            </div>
-            <div className="text-2xl lg:text-3xl font-serif font-semibold text-emerald-800 mt-2 tabular-nums">
-              {formatCurrency(stats.net_profit)}
-            </div>
-            <div className="text-[11px] text-[#716D66] mt-1">
-              Less {formatCurrency(stats.total_expenses)} expenses
-            </div>
+        {/* 3. Low Stock */}
+        <div
+          onClick={() => onNavigate('inventory')}
+          className="p-5 bg-white rounded-xl border border-[#E5E0D8] shadow-xs flex flex-col justify-between cursor-pointer hover:border-amber-400 transition-colors"
+        >
+          <div className="flex items-center justify-between text-[#716D66]">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#716D66]">
+              LOW STOCK
+            </span>
+            <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
           </div>
-        ) : (
-          <div
-            onClick={() => onNavigate('inventory')}
-            className="p-5 bg-white rounded-xl border border-[#E5E0D8] shadow-xs cursor-pointer hover:border-[#B89B65] transition-colors"
-          >
-            <div className="flex items-center justify-between text-[#716D66]">
-              <span className="text-xs uppercase tracking-wider font-medium">Low Stock Alerts</span>
-              <AlertTriangle className="w-4 h-4 text-amber-600" />
-            </div>
-            <div className="text-2xl lg:text-3xl font-serif font-semibold text-amber-700 mt-2 tabular-nums">
-              {stats.low_stock_count || 0}
-            </div>
-            <div className="text-[11px] text-[#B89B65] mt-1 flex items-center gap-1 font-medium">
-              <span>Inspect inventory</span>
-              <ChevronRight className="w-3 h-3" />
-            </div>
+          <div className="text-2xl lg:text-3xl font-serif font-semibold text-[#1A1A1A] mt-3 tabular-nums">
+            {stats.low_stock_count ?? 0}
           </div>
-        )}
+          <div className="text-xs text-[#716D66] mt-1.5">
+            products below reorder
+          </div>
+        </div>
+
+        {/* 4. Slow Moving Stock (Replaces Expiring Soon) */}
+        <div
+          onClick={() => onNavigate('inventory')}
+          className="p-5 bg-white rounded-xl border border-[#E5E0D8] shadow-xs flex flex-col justify-between cursor-pointer hover:border-rose-400 transition-colors"
+        >
+          <div className="flex items-center justify-between text-[#716D66]">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#716D66]">
+              SLOW MOVING STOCK
+            </span>
+            <Clock className="w-4 h-4 text-rose-500 shrink-0" />
+          </div>
+          <div className="text-2xl lg:text-3xl font-serif font-semibold text-[#1A1A1A] mt-3 tabular-nums">
+            {stats.slow_moving_count ?? 0}
+          </div>
+          <div className="text-xs text-[#716D66] mt-1.5">
+            within 30 days
+          </div>
+        </div>
+
+        {/* 5. Total Products */}
+        <div
+          onClick={() => onNavigate('products')}
+          className="p-5 bg-white rounded-xl border border-[#E5E0D8] shadow-xs flex flex-col justify-between cursor-pointer hover:border-[#1E3E31] transition-colors"
+        >
+          <div className="flex items-center justify-between text-[#716D66]">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#716D66]">
+              TOTAL PRODUCTS
+            </span>
+            <Package className="w-4 h-4 text-[#1E3E31] shrink-0" />
+          </div>
+          <div className="text-2xl lg:text-3xl font-serif font-semibold text-[#1A1A1A] mt-3 tabular-nums">
+            {stats.total_products ?? 0}
+          </div>
+          <div className="text-xs text-[#716D66] mt-1.5">
+            active products
+          </div>
+        </div>
       </div>
 
-      {/* SECONDARY STRIP: Inventory Valuation & Low Stock Quick Stats */}
+      {/* SECONDARY STRIP: Inventory Valuation Quick Stats */}
       {role === 'admin' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="p-4 bg-[#EFECE6]/50 rounded-lg border border-[#E5E0D8] flex items-center justify-between">
             <div>
               <span className="text-[11px] uppercase tracking-wider text-[#716D66] font-medium">Retail Valuation</span>
@@ -299,19 +327,6 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
             <div className="text-right text-xs text-[#716D66]">
               <span>Capital tied in stock</span>
             </div>
-          </div>
-
-          <div
-            onClick={() => onNavigate('inventory')}
-            className="p-4 bg-[#EFECE6]/50 rounded-lg border border-[#E5E0D8] flex items-center justify-between cursor-pointer hover:bg-[#EFECE6] transition-colors"
-          >
-            <div>
-              <span className="text-[11px] uppercase tracking-wider text-[#716D66] font-medium">Restock Required</span>
-              <p className="text-xl font-serif font-semibold text-amber-700 tabular-nums mt-0.5">
-                {stats.low_stock_count} Items Below Min
-              </p>
-            </div>
-            <ChevronRight className="w-4 h-4 text-[#B89B65]" />
           </div>
         </div>
       )}
