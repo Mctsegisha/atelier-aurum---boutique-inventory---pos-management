@@ -1,6 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { ProductsService } from '../src/modules/products/products.service.js';
+import { createProductSchema } from '../src/modules/products/products.schemas.js';
 import { AuthUser } from '../src/middleware/authenticate.js';
 
 class MockProductsRepository {
@@ -92,5 +93,44 @@ describe('Product Autocomplete Search & Fallback Logic', () => {
     assert.equal(res[0].wholesale_price, undefined);
     assert.equal(res[0].variants[0].purchase_price, undefined);
     assert.equal(res[0].selling_price, 4500);
+  });
+});
+
+describe('Product Registration Schema & Status Defaulting', () => {
+  it('should accept product creation payload from admin without status field and default status to "active"', () => {
+    const payload = {
+      name: 'Luxury Velvet Trench Coat',
+      description: 'Handcrafted trench coat',
+      selling_price: 3500,
+      purchase_price: 1800
+    };
+
+    const parsed = createProductSchema.body.safeParse(payload);
+    assert.ok(parsed.success, 'Validation should pass without explicit status');
+    assert.equal(parsed.data.name, 'Luxury Velvet Trench Coat');
+    assert.equal(parsed.data.status, 'active', 'Omitted status should default to "active"');
+  });
+
+  it('should accept product creation payload with explicit status', () => {
+    const payload = {
+      name: 'Artisan Wool Scarf',
+      selling_price: 850,
+      status: 'draft'
+    };
+
+    const parsed = createProductSchema.body.safeParse(payload);
+    assert.ok(parsed.success);
+    assert.equal(parsed.data.status, 'draft');
+  });
+
+  it('should reject invalid status value', () => {
+    const payload = {
+      name: 'Invalid Status Test',
+      selling_price: 500,
+      status: 'not_a_valid_status'
+    };
+
+    const parsed = createProductSchema.body.safeParse(payload);
+    assert.ok(!parsed.success, 'Should reject invalid status string');
   });
 });

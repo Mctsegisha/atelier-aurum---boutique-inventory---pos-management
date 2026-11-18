@@ -166,7 +166,7 @@ export class ProductsService {
     } = body;
 
     const isStorePerson = user.role === 'store_person';
-    const initialStatus = isStorePerson ? 'pending_approval' : 'active';
+    const initialStatus = isStorePerson ? 'pending_approval' : (body.status || 'active');
     const approvedBy = isStorePerson ? null : user.id;
     const approvedAt = isStorePerson ? null : new Date().toISOString();
 

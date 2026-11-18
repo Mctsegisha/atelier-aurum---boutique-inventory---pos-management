@@ -488,7 +488,7 @@ export function ProductsView() {
       min_stock_level: Number(formMinStock) || 3,
       dead_stock_days: Number(formDeadStockDays) || 60,
       image_url: formImageUrl.trim(),
-      status: formStatus,
+      status: role === 'admin' ? 'active' : (formStatus || 'active'),
       is_simple: formIsSimple ? 1 : 0,
       attributes: null,
       // If simple product: pass single stock quantity, sku and barcode
@@ -1366,8 +1366,8 @@ export function ProductsView() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="md:col-span-2 relative" ref={titleAutocompleteRef}>
+                <div className={role === 'admin' ? 'w-full' : 'grid grid-cols-1 md:grid-cols-3 gap-4'}>
+                  <div className={`relative ${role === 'admin' ? 'w-full' : 'md:col-span-2'}`} ref={titleAutocompleteRef}>
                     <div className="flex items-center justify-between mb-1">
                       <label className="block text-xs font-medium text-[#1A1A1A]">
                         Product Title / Model Name <span className="text-red-500">*</span>
@@ -1528,26 +1528,28 @@ export function ProductsView() {
                     )}
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-medium text-[#1A1A1A] mb-1">Status</label>
-                    {role === 'store_person' && !editingProductId ? (
-                      <div className="p-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900 font-semibold flex items-center justify-between">
-                        <span>Pending Approval</span>
-                        <span className="text-[10px] text-amber-700 font-normal">Requires Admin</span>
-                      </div>
-                    ) : (
-                      <select
-                        value={formStatus}
-                        onChange={e => setFormStatus(e.target.value as any)}
-                        className="w-full p-2 bg-[#F9F8F6] border border-[#E5E0D8] rounded-lg text-xs text-[#1A1A1A] focus:outline-none focus:border-[#B89B65]"
-                      >
-                        <option value="active">Active (Available on POS)</option>
-                        <option value="pending_approval">Pending Approval</option>
-                        <option value="draft">Draft (Backstage Review)</option>
-                        <option value="archived">Archived</option>
-                      </select>
-                    )}
-                  </div>
+                  {role !== 'admin' && (
+                    <div>
+                      <label className="block text-xs font-medium text-[#1A1A1A] mb-1">Status</label>
+                      {role === 'store_person' && !editingProductId ? (
+                        <div className="p-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900 font-semibold flex items-center justify-between">
+                          <span>Pending Approval</span>
+                          <span className="text-[10px] text-amber-700 font-normal">Requires Admin</span>
+                        </div>
+                      ) : (
+                        <select
+                          value={formStatus}
+                          onChange={e => setFormStatus(e.target.value as any)}
+                          className="w-full p-2 bg-[#F9F8F6] border border-[#E5E0D8] rounded-lg text-xs text-[#1A1A1A] focus:outline-none focus:border-[#B89B65]"
+                        >
+                          <option value="active">Active (Available on POS)</option>
+                          <option value="pending_approval">Pending Approval</option>
+                          <option value="draft">Draft (Backstage Review)</option>
+                          <option value="archived">Archived</option>
+                        </select>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div>

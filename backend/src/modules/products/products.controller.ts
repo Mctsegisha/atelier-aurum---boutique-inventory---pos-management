@@ -44,6 +44,9 @@ export class ProductsController {
 
   public createProduct = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
+      if (req.user?.role === 'admin' && !req.body.status) {
+        req.body.status = 'active';
+      }
       const result = this.service.createProduct(req.user!, req.body);
       res.status(201).json(result);
     } catch (err) {

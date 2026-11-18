@@ -15,6 +15,7 @@ export const createProductSchema = {
     min_stock_level: z.coerce.number().int().min(0).default(5),
     dead_stock_days: z.coerce.number().int().min(1).default(60),
     image_url: z.string().optional().nullable(),
+    status: z.enum(['active', 'pending_approval', 'draft', 'archived']).optional().default('active'),
     is_simple: z.coerce.number().int().min(0).max(1).default(0),
     season: z.string().optional().nullable(),
     collection: z.string().optional().nullable(),
