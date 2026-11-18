@@ -63,6 +63,54 @@ export class ProductsService {
     });
   }
 
+  public autocomplete(user: AuthUser, query: string) {
+    if (!query || !query.trim()) {
+      return [];
+    }
+    const isCashier = user.role === 'sales';
+    const products = this.repo.autocomplete(query, isCashier, 8);
+    const productIds = products.map((p) => p.id);
+    let variantsMap: Record<string, any[]> = {};
+
+    if (productIds.length > 0) {
+      const variants = this.repo.getVariantsForProductIds(productIds, isCashier);
+      for (const v of variants) {
+        if (isCashier) {
+          delete v.purchase_price;
+        }
+        if (v.attributes && typeof v.attributes === 'string') {
+          try {
+            v.attributes = JSON.parse(v.attributes);
+          } catch {
+            // Keep as string
+          }
+        }
+        if (!variantsMap[v.product_id]) {
+          variantsMap[v.product_id] = [];
+        }
+        variantsMap[v.product_id].push(v);
+      }
+    }
+
+    return products.map((p) => {
+      if (isCashier) {
+        delete p.purchase_price;
+        delete p.wholesale_price;
+      }
+      if (p.attributes && typeof p.attributes === 'string') {
+        try {
+          p.attributes = JSON.parse(p.attributes);
+        } catch {
+          // Keep as string
+        }
+      }
+      return {
+        ...p,
+        variants: variantsMap[p.id] || []
+      };
+    });
+  }
+
   public getByBarcode(barcode: string, user: AuthUser) {
     const variant = this.repo.findByBarcode(barcode);
     if (!variant) {

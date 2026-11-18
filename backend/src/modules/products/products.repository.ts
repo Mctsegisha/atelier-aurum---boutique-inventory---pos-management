@@ -69,6 +69,51 @@ export class ProductsRepository {
     return db.prepare(sql).all(...params) as any[];
   }
 
+  public autocomplete(query: string, isCashier = false, limit = 8) {
+    if (!query || !query.trim()) return [];
+    const trimmed = query.trim();
+    const pattern = `%${trimmed}%`;
+    const startsWithPattern = `${trimmed}%`;
+
+    let sql = `
+      SELECT p.*, c.name as category_name, c.slug as category_slug,
+             sc.name as subcategory_name, sc.slug as subcategory_slug,
+             b.name as brand_name,
+             (SELECT COALESCE(SUM(i.quantity), 0) FROM inventory i JOIN product_variants pv ON i.variant_id = pv.id WHERE pv.product_id = p.id) as total_stock
+      FROM products p
+      LEFT JOIN categories c ON p.category_id = c.id
+      LEFT JOIN subcategories sc ON p.subcategory_id = sc.id
+      LEFT JOIN brands b ON p.brand_id = b.id
+      WHERE (
+        p.name LIKE ? OR c.name LIKE ? OR sc.name LIKE ? OR EXISTS (
+          SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND (pv.sku LIKE ? OR pv.barcode LIKE ? OR pv.variant_name LIKE ?)
+        )
+      )
+    `;
+
+    const params: any[] = [pattern, pattern, pattern, pattern, pattern, pattern];
+
+    if (isCashier) {
+      sql += ` AND p.status = 'active'`;
+    } else {
+      sql += ` AND p.status != 'archived'`;
+    }
+
+    sql += `
+      ORDER BY 
+        CASE 
+          WHEN LOWER(p.name) = LOWER(?) THEN 0
+          WHEN LOWER(p.name) LIKE LOWER(?) THEN 1
+          ELSE 2 
+        END,
+        p.name ASC
+      LIMIT ?
+    `;
+    params.push(trimmed, startsWithPattern, limit);
+
+    return db.prepare(sql).all(...params) as any[];
+  }
+
   public getVariantsForProductIds(productIds: string[], isCashier = false) {
     if (productIds.length === 0) return [];
     const placeholders = productIds.map(() => '?').join(',');

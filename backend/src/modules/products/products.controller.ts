@@ -14,6 +14,16 @@ export class ProductsController {
     }
   };
 
+  public autocomplete = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const query = (req.query.q || req.query.search || '') as string;
+      const data = this.service.autocomplete(req.user!, query);
+      res.json(data);
+    } catch (err) {
+      next(err);
+    }
+  };
+
   public getByBarcode = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const { barcode } = req.params;

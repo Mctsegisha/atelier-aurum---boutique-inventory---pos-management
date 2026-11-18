@@ -150,6 +150,10 @@ export const api = {
     return request<Product[]>(`/api/products${query ? `?${query}` : ''}`);
   },
 
+  autocompleteProducts: (query: string) => {
+    return request<Product[]>(`/api/products/autocomplete?q=${encodeURIComponent(query)}`);
+  },
+
   lookupBarcode: (barcode: string) =>
     request<any>(`/api/products/barcode/${encodeURIComponent(barcode)}`),
 

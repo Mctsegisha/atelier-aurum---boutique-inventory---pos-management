@@ -160,7 +160,7 @@ const workerSource = `
     const isTxCmd = /^(BEGIN|COMMIT|ROLLBACK)/i.test(sql.trim());
 
     if (preferHttp && !isTxCmd) {
-      const res = await httpSql.query(sql, params);
+      const res = typeof httpSql.query === 'function' ? await httpSql.query(sql, params) : await httpSql(sql, params);
       const rows = res.rows || res;
       return { rows, rowCount: res.rowCount ?? (Array.isArray(rows) ? rows.length : 0) };
     }
@@ -174,7 +174,7 @@ const workerSource = `
       if (isTxCmd) {
         return { rows: [], rowCount: 0 };
       }
-      const res = await httpSql.query(sql, params);
+      const res = typeof httpSql.query === 'function' ? await httpSql.query(sql, params) : await httpSql(sql, params);
       const rows = res.rows || res;
       return { rows, rowCount: res.rowCount ?? (Array.isArray(rows) ? rows.length : 0) };
     }

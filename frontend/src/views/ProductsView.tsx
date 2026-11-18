@@ -10,6 +10,7 @@ import {
 } from '../lib/productCategories.ts';
 import {
   Search,
+  SearchX,
   Plus,
   Filter,
   DollarSign,
@@ -98,6 +99,8 @@ export function ProductsView() {
   // Autocomplete Search & Non-Destructive Clone State
   const [showTitleSuggestions, setShowTitleSuggestions] = useState<boolean>(false);
   const [clonedFromInfo, setClonedFromInfo] = useState<{ id: string; name: string } | null>(null);
+  const [apiTitleSuggestions, setApiTitleSuggestions] = useState<Product[] | null>(null);
+  const [isSearchingTitle, setIsSearchingTitle] = useState<boolean>(false);
   const titleAutocompleteRef = useRef<HTMLDivElement>(null);
 
   // Dynamic Attributes & Custom Attributes
@@ -186,9 +189,37 @@ export function ProductsView() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Debounced search query to backend autocomplete endpoint
+  useEffect(() => {
+    if (!formName || !formName.trim() || editingProductId) {
+      setApiTitleSuggestions(null);
+      setIsSearchingTitle(false);
+      return;
+    }
+
+    const trimmed = formName.trim();
+    const timer = setTimeout(async () => {
+      setIsSearchingTitle(true);
+      try {
+        const results = await api.autocompleteProducts(trimmed);
+        setApiTitleSuggestions(results || []);
+      } catch (err) {
+        console.error('Failed to autocomplete products', err);
+        setApiTitleSuggestions(null);
+      } finally {
+        setIsSearchingTitle(false);
+      }
+    }, 150);
+
+    return () => clearTimeout(timer);
+  }, [formName, editingProductId]);
+
   // Filter existing catalog products for searchable title autocomplete
   const matchingProducts = useMemo(() => {
     if (!formName || !formName.trim() || editingProductId) return [];
+    if (apiTitleSuggestions !== null) {
+      return apiTitleSuggestions;
+    }
     const query = formName.toLowerCase().trim();
     return products
       .filter(p =>
@@ -198,7 +229,46 @@ export function ProductsView() {
         (p.variants && p.variants.some(v => (v.sku && v.sku.toLowerCase().includes(query)) || (v.barcode && v.barcode.includes(query))))
       )
       .slice(0, 8);
-  }, [formName, products, editingProductId]);
+  }, [formName, apiTitleSuggestions, products, editingProductId]);
+
+  // Confirm typed title as a brand-new product, clearing any prefilled template states
+  const handleConfirmNewProduct = () => {
+    const confirmedTitle = formName.trim();
+    if (!confirmedTitle) return;
+
+    setEditingProductId(null);
+    setClonedFromInfo(null);
+    setFormName(confirmedTitle);
+
+    // Clear any prefilled template states so user can proceed with fresh pricing, variants, and stock
+    setFormSellingPrice(0);
+    setFormPurchasePrice(0);
+    setFormWholesalePrice(0);
+    setFormDesc('');
+    setFormBarcode('');
+
+    if (formIsSimple) {
+      setFormSimpleStock(0);
+      setFormSimpleSku('');
+      setFormSimpleBarcode('');
+    } else {
+      setVariantsList([
+        {
+          size: 'M',
+          color: 'Standard',
+          color_code: '#B89B65',
+          variant_name: 'M · Standard',
+          quantity: 0,
+          selling_price: 0,
+          purchase_price: 0,
+          sku: '',
+          barcode: ''
+        }
+      ]);
+    }
+
+    setShowTitleSuggestions(false);
+  };
 
   // Non-destructive autofill / clone from existing catalog item
   const handleAutofillFromExisting = (p: Product) => {
@@ -1324,63 +1394,136 @@ export function ProductsView() {
                             setShowTitleSuggestions(true);
                           }
                         }}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' && showTitleSuggestions && matchingProducts.length === 0) {
+                            e.preventDefault();
+                            handleConfirmNewProduct();
+                          }
+                        }}
                         className="w-full p-2 pr-8 bg-[#F9F8F6] border border-[#E5E0D8] rounded-lg text-xs text-[#1A1A1A] focus:outline-none focus:border-[#B89B65]"
                       />
                       {!editingProductId && (
                         <div className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8C8275]">
-                          <Search className="w-3.5 h-3.5" />
+                          {isSearchingTitle ? (
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#B89B65]" />
+                          ) : (
+                            <Search className="w-3.5 h-3.5" />
+                          )}
                         </div>
                       )}
                     </div>
 
                     {/* Searchable Autocomplete Dropdown */}
-                    {showTitleSuggestions && !editingProductId && matchingProducts.length > 0 && (
-                      <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-[#E5E0D8] rounded-xl shadow-xl z-50 overflow-hidden max-h-72 overflow-y-auto divide-y divide-[#F0EDE8] animate-in fade-in duration-100">
-                        <div className="p-2 bg-[#F9F8F6] text-[10px] font-semibold text-[#8C8275] uppercase tracking-wider flex items-center justify-between">
-                          <span className="flex items-center gap-1.5">
-                            <Sparkles className="w-3 h-3 text-[#B89B65]" />
-                            Matching Products in Catalog (Click to Clone Batch)
-                          </span>
-                          <span className="text-[10px] text-[#B89B65] font-normal">Non-Destructive Autofill</span>
-                        </div>
-                        {matchingProducts.map(p => (
-                          <button
-                            key={p.id}
-                            type="button"
-                            onClick={() => handleAutofillFromExisting(p)}
-                            className="w-full p-2.5 flex items-center justify-between text-left hover:bg-[#FAF8F5] transition-colors cursor-pointer group"
-                          >
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-8 h-8 rounded-md bg-[#F0EDE8] overflow-hidden shrink-0 border border-[#E5E0D8] flex items-center justify-center">
-                                {p.image_url ? (
-                                  <img src={p.image_url} alt="" className="w-full h-full object-cover" />
-                                ) : (
-                                  <Package className="w-3.5 h-3.5 text-[#8C8275]" />
-                                )}
-                              </div>
-                              <div className="min-w-0">
-                                <div className="text-xs font-semibold text-[#1A1A1A] group-hover:text-[#B89B65] transition-colors truncate">
-                                  {p.name}
-                                </div>
-                                <div className="text-[10px] text-[#716D66] flex items-center gap-2 mt-0.5">
-                                  <span className="bg-[#EFECE6] px-1.5 py-0.2 rounded font-medium">
-                                    {p.category_name || 'Catalog Item'}
-                                  </span>
-                                  {p.subcategory_name && <span>· {p.subcategory_name}</span>}
-                                  <span>· Stock: {p.total_stock || 0} units</span>
-                                </div>
-                              </div>
+                    {showTitleSuggestions && !editingProductId && formName.trim().length > 0 && (
+                      <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-[#E5E0D8] rounded-xl shadow-xl z-50 overflow-hidden divide-y divide-[#F0EDE8] animate-in fade-in duration-100">
+                        {matchingProducts.length > 0 ? (
+                          <>
+                            <div className="p-2 bg-[#F9F8F6] text-[10px] font-semibold text-[#8C8275] uppercase tracking-wider flex items-center justify-between">
+                              <span className="flex items-center gap-1.5">
+                                <Sparkles className="w-3 h-3 text-[#B89B65]" />
+                                Matching Products in Catalog (Click to Clone Batch)
+                              </span>
+                              <span className="text-[10px] text-[#B89B65] font-normal">Non-Destructive Autofill</span>
                             </div>
-                            <div className="text-right shrink-0 ml-3">
-                              <div className="text-xs font-semibold text-[#1A1A1A]">
-                                {formatCurrency(p.selling_price)}
+                            <div className="max-h-60 overflow-y-auto divide-y divide-[#F0EDE8]">
+                              {matchingProducts.map(p => (
+                                <button
+                                  key={p.id}
+                                  type="button"
+                                  onClick={() => handleAutofillFromExisting(p)}
+                                  className="w-full p-2.5 flex items-center justify-between text-left hover:bg-[#FAF8F5] transition-colors cursor-pointer group"
+                                >
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <div className="w-8 h-8 rounded-md bg-[#F0EDE8] overflow-hidden shrink-0 border border-[#E5E0D8] flex items-center justify-center">
+                                      {p.image_url ? (
+                                        <img src={p.image_url} alt="" className="w-full h-full object-cover" />
+                                      ) : (
+                                        <Package className="w-3.5 h-3.5 text-[#8C8275]" />
+                                      )}
+                                    </div>
+                                    <div className="min-w-0">
+                                      <div className="text-xs font-semibold text-[#1A1A1A] group-hover:text-[#B89B65] transition-colors truncate">
+                                        {p.name}
+                                      </div>
+                                      <div className="text-[10px] text-[#716D66] flex items-center gap-2 mt-0.5">
+                                        <span className="bg-[#EFECE6] px-1.5 py-0.2 rounded font-medium">
+                                          {p.category_name || 'Catalog Item'}
+                                        </span>
+                                        {p.subcategory_name && <span>· {p.subcategory_name}</span>}
+                                        <span>· Stock: {p.total_stock || 0} units</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="text-right shrink-0 ml-3">
+                                    <div className="text-xs font-semibold text-[#1A1A1A]">
+                                      {formatCurrency(p.selling_price)}
+                                    </div>
+                                    <span className="text-[10px] text-[#B89B65] group-hover:underline flex items-center gap-0.5 justify-end">
+                                      Autofill Batch ↳
+                                    </span>
+                                  </div>
+                                </button>
+                              ))}
+                            </div>
+                            <div className="p-2 bg-[#F9F8F6] border-t border-[#E5E0D8]">
+                              <button
+                                type="button"
+                                onClick={handleConfirmNewProduct}
+                                className="w-full py-2 px-2.5 text-xs text-[#8C733E] hover:text-[#1A1A1A] hover:bg-white rounded-lg flex items-center justify-between transition-colors font-medium cursor-pointer"
+                              >
+                                <span className="flex items-center gap-1.5">
+                                  <Plus className="w-3.5 h-3.5 text-[#B89B65]" />
+                                  <span>Add as a new product</span>
+                                  <span className="text-[10px] text-[#716D66] truncate max-w-[160px]">"{formName.trim()}"</span>
+                                </span>
+                                <span className="text-[10px] text-[#B89B65] font-semibold">Fresh product ↳</span>
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            {/* First Row (Disabled/Informational): Product not found */}
+                            <div className="p-3 bg-[#FAF8F5]/80 text-[#716D66] select-none flex items-center justify-between cursor-default">
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-7 h-7 rounded-lg bg-[#EFECE6] border border-[#E5E0D8] flex items-center justify-center text-[#8C8275] shrink-0">
+                                  <SearchX className="w-3.5 h-3.5" />
+                                </div>
+                                <div>
+                                  <div className="text-xs font-semibold text-[#5A554E]">Product not found</div>
+                                  <div className="text-[11px] text-[#8C8275]">No matching records found in catalog</div>
+                                </div>
                               </div>
-                              <span className="text-[10px] text-[#B89B65] group-hover:underline flex items-center gap-0.5 justify-end">
-                                Autofill Batch ↳
+                              <span className="text-[10px] font-medium uppercase tracking-wider text-[#A09A90] bg-[#EFECE6] px-2 py-0.5 rounded">
+                                No matches
                               </span>
                             </div>
-                          </button>
-                        ))}
+
+                            {/* Second Row (Actionable Button/Link): Add as a new product */}
+                            <button
+                              type="button"
+                              onClick={handleConfirmNewProduct}
+                              className="w-full p-3 flex items-center justify-between text-left hover:bg-[#FAF8F5] transition-colors cursor-pointer group bg-white"
+                            >
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-7 h-7 rounded-lg bg-[#FAF0D7] border border-[#E8CE8B] flex items-center justify-center text-[#8C733E] group-hover:bg-[#B89B65] group-hover:text-white transition-colors shrink-0">
+                                  <Plus className="w-4 h-4" />
+                                </div>
+                                <div>
+                                  <div className="text-xs font-bold text-[#1A1A1A] group-hover:text-[#B89B65] transition-colors flex items-center gap-1.5">
+                                    <span>Add as a new product</span>
+                                    <span className="text-[10px] text-[#B89B65] font-normal truncate max-w-[200px]">"{formName.trim()}"</span>
+                                  </div>
+                                  <div className="text-[11px] text-[#716D66]">
+                                    Proceed with fresh pricing, variants, and stock allocation
+                                  </div>
+                                </div>
+                              </div>
+                              <span className="text-xs text-[#B89B65] font-semibold group-hover:translate-x-0.5 transition-transform flex items-center gap-1 shrink-0 ml-2">
+                                Create fresh ↳
+                              </span>
+                            </button>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>

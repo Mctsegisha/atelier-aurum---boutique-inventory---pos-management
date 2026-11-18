@@ -26,6 +26,7 @@ router.get('/brands/all', authenticateUser, productsController.getBrands);
 router.post('/brands', authenticateUser, requireRole(['admin', 'store_person']), productsController.createBrand);
 
 // Products
+router.get('/autocomplete', authenticateUser, productsController.autocomplete);
 router.get('/', authenticateUser, productsController.getProducts);
 router.get('/barcode/:barcode', authenticateUser, productsController.getByBarcode);
 router.post('/', authenticateUser, requireRole(['admin', 'store_person']), validateRequest(createProductSchema), productsController.createProduct);
