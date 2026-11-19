@@ -717,20 +717,27 @@ export function seedSampleTransactions() {
     insertPayment.run('pay_003', 'sale_003', 'mobile', 842.4, 'APAY_REF_44120', '-3 days');
 
     // 11. Expense Categories & Expenses
-    const insertExpCat = db.prepare('INSERT INTO expense_categories (id, name, description) VALUES (?, ?, ?) ON CONFLICT (id) DO NOTHING');
-    insertExpCat.run('ec_merch', 'Visual Merchandising & Florals', 'Boutique floral arrangements, scents, and window displays');
-    insertExpCat.run('ec_packaging', 'Luxury Packaging & Ribbons', 'Custom embossed gift boxes, dust bags, and grosgrain ribbons');
-    insertExpCat.run('ec_tailoring', 'Master Tailoring & Alterations', 'In-house alterations and fitting supplies');
-    insertExpCat.run('ec_utilities', 'Boutique Operations & Utilities', 'Showroom power, high-speed fiber, salon refreshments');
+    const insertExpCat = db.prepare('INSERT INTO expense_categories (id, name, description) VALUES (?, ?, ?) ON CONFLICT (name) DO NOTHING');
+    insertExpCat.run('ec_electricity', 'Electricity', 'Store electricity and lighting');
+    insertExpCat.run('ec_internet_phone', 'Internet & phone', 'Broadband and business communications');
+    insertExpCat.run('ec_licences_fees', 'Licences & fees', 'Commercial and regulatory municipal fees');
+    insertExpCat.run('ec_maintenance', 'Maintenance', 'Showroom equipment maintenance and repair');
+    insertExpCat.run('ec_other', 'Other', 'General miscellaneous operational expenses');
+    insertExpCat.run('ec_rent', 'Rent', 'Commercial boutique premises lease');
+    insertExpCat.run('ec_salaries', 'Salaries', 'Payroll disbursements and wages');
+    insertExpCat.run('ec_transport', 'Transport', 'Logistics, delivery, and staff transport');
+    insertExpCat.run('ec_water', 'Water', 'Municipal water utilities');
+    insertExpCat.run('ec_sample_operating_costs', 'Sample operating costs', 'Sample operating costs');
+    insertExpCat.run('ec_sample_rent', 'Sample rent', 'Sample rent');
 
     const insertExp = db.prepare(`
       INSERT INTO expenses (id, category_id, title, description, amount, payment_method, expense_date, recorded_by_id)
       VALUES (?, ?, ?, ?, ?, ?, CURRENT_DATE + (?::interval), ?)
       ON CONFLICT (id) DO NOTHING
     `);
-    insertExp.run('exp_1', 'ec_merch', 'Weekly Salon White Lilies & Orchid Arrangements', 'Fresh seasonal floral display for boutique entry table and dressing salons', 320.0, 'card', '-1 day', 'u_manager');
-    insertExp.run('exp_2', 'ec_packaging', 'Custom Gold Foil Embossed Magnetic Boxes (500 units)', 'Order of luxury gift boxes from Florentine cartonnerie', 850.0, 'bank_transfer', '-4 days', 'u_admin');
-    insertExp.run('exp_3', 'ec_utilities', 'Chilled Vintage Champagne & Artisan Mineral Water', 'Hospitality refreshments for private VIP fitting sessions', 180.0, 'card', '-6 days', 'u_manager');
+    insertExp.run('exp_1', 'ec_sample_operating_costs', 'Sample operating costs', 'Regular operational overhead', 320.0, 'card', '-1 day', 'u_manager');
+    insertExp.run('exp_2', 'ec_sample_rent', 'Sample rent', 'Store lease monthly instalment', 850.0, 'bank_transfer', '-4 days', 'u_admin');
+    insertExp.run('exp_3', 'ec_electricity', 'Electricity', 'Showroom lighting and climate control', 180.0, 'card', '-6 days', 'u_manager');
 
     // 12. Active Shift for Camille
     const insertShift = db.prepare(`
@@ -739,6 +746,84 @@ export function seedSampleTransactions() {
       ON CONFLICT (id) DO NOTHING
     `);
     insertShift.run('shift_current_01', 'u_cashier');
+
+    // 12b. Seed Historical Cash Sessions (matching UI reference history)
+    const insertCashSession = db.prepare(`
+      INSERT INTO cash_sessions (
+        id, opened_by_user_id, opened_by_name, opened_at, closed_at,
+        opening_float, cash_sales, telebirr_sales, total_sales,
+        expected_cash, closing_cash, difference, notes, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT (id) DO NOTHING
+    `);
+
+    insertCashSession.run(
+      'csess_oct29',
+      'u_admin',
+      'Demo Visitor',
+      '2026-10-29 08:00:00+03',
+      '2026-11-19 16:27:00+03',
+      1000.0,
+      1638.50,
+      359.00,
+      3661.50,
+      2638.50,
+      2638.50,
+      0.0,
+      'Reconciled drawer session',
+      'closed'
+    );
+
+    insertCashSession.run(
+      'csess_oct28',
+      'u_cashier',
+      'Sample Staff 1',
+      '2026-10-28 08:00:00+03',
+      '2026-10-28 20:00:00+03',
+      1000.0,
+      514.00,
+      511.00,
+      1691.00,
+      1514.00,
+      1514.00,
+      0.0,
+      'Full shift balanced',
+      'closed'
+    );
+
+    insertCashSession.run(
+      'csess_oct27',
+      'u_cashier',
+      'Sample Staff 1',
+      '2026-10-27 08:00:00+03',
+      '2026-10-27 20:00:00+03',
+      1000.0,
+      424.00,
+      595.00,
+      1727.00,
+      1424.00,
+      1419.00,
+      -5.00,
+      'Small discrepancy noted',
+      'closed'
+    );
+
+    insertCashSession.run(
+      'csess_oct26',
+      'u_cashier',
+      'Sample Staff 1',
+      '2026-10-26 08:00:00+03',
+      '2026-10-26 20:00:00+03',
+      1000.0,
+      608.80,
+      0.00,
+      1620.80,
+      1608.80,
+      1608.80,
+      0.0,
+      'Daily register close',
+      'closed'
+    );
 
     // 13. Business Settings
     const insertSettings = db.prepare(`

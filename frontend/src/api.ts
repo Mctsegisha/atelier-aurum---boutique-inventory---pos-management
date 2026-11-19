@@ -1,4 +1,4 @@
-import { User, Product, Category, Subcategory, Brand, InventoryItem, InventoryMovement, Customer, Sale, Supplier, PurchaseOrder, Expense, BusinessSettings, Notification, AuditLog, ParentInventoryProduct, InventoryStats, SlowMovingInventoryItem } from './types.ts';
+import { User, Product, Category, Subcategory, Brand, InventoryItem, InventoryMovement, Customer, Sale, Supplier, PurchaseOrder, Expense, BusinessSettings, Notification, AuditLog, ParentInventoryProduct, InventoryStats, SlowMovingInventoryItem, CashSession } from './types.ts';
 
 const TOKEN_KEY = 'aurum_jwt_token';
 
@@ -290,9 +290,19 @@ export const api = {
     const query = new URLSearchParams(params as any).toString();
     return request<Expense[]>(`/api/expenses${query ? `?${query}` : ''}`);
   },
-  getExpenseCategories: () => request<any[]>('/api/expenses/categories/all'),
-  createExpense: (data: any) =>
-    request<any>('/api/expenses', { method: 'POST', body: JSON.stringify(data) }),
+  getExpenseCategories: () => request<any[]>('/api/expense-categories'),
+  createExpenseCategory: (data: { name: string; description?: string }) =>
+    request<any>('/api/expense-categories', { method: 'POST', body: JSON.stringify(data) }),
+  createExpense: (data: {
+    category_id: string;
+    amount: number;
+    expense_date?: string;
+    date?: string;
+    note?: string;
+    title?: string;
+    description?: string;
+    payment_method?: string;
+  }) => request<any>('/api/expenses', { method: 'POST', body: JSON.stringify(data) }),
   deleteExpense: (id: string) =>
     request<any>(`/api/expenses/${id}`, { method: 'DELETE' }),
 
@@ -319,6 +329,22 @@ export const api = {
     request<any>('/api/shifts/start', { method: 'POST', body: JSON.stringify(data) }),
   closeShift: (data: { ending_cash: number; notes?: string }) =>
     request<any>('/api/shifts/close', { method: 'POST', body: JSON.stringify(data) }),
+
+  // Cash Sessions
+  getCashSessions: () =>
+    request<{ active_session: CashSession | null; history: CashSession[] }>('/api/cash-sessions'),
+  getActiveCashSession: () =>
+    request<{ session: CashSession | null }>('/api/cash-sessions/active'),
+  openCashSession: (data: { opening_float: number; notes?: string }) =>
+    request<{ session: CashSession }>('/api/cash-sessions/open', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+  closeCashSession: (id: string, data: { closing_cash: number; notes?: string }) =>
+    request<{ session: CashSession }>(`/api/cash-sessions/${id}/close`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
 
   // Audit & Notifications
   getAuditLogs: (params?: { action?: string; entityType?: string; limit?: number }) => {

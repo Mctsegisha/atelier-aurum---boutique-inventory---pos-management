@@ -854,7 +854,7 @@ export function PosView() {
               {[
                 { id: 'card', label: 'Credit Card / EMV', icon: CreditCard },
                 { id: 'cash', label: 'Cash Tender', icon: Banknote },
-                { id: 'mobile', label: 'Apple Pay / Mobile', icon: Smartphone },
+                { id: 'mobile', label: 'Telebirr / Mobile', icon: Smartphone },
                 { id: 'transfer', label: 'Bank Wire / ACH', icon: CheckCircle }
               ].map(pm => {
                 const Icon = pm.icon;

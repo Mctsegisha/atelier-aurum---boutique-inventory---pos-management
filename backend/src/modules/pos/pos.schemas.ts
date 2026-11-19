@@ -11,7 +11,7 @@ export const checkoutSchema = {
       )
       .min(1, 'Cart cannot be empty'),
     customer_id: z.string().optional().nullable(),
-    payment_method: z.enum(['cash', 'card', 'transfer', 'mobile']).default('card'),
+    payment_method: z.enum(['cash', 'card', 'transfer', 'mobile', 'telebirr']).default('card'),
     discount_amount: z.number().min(0).default(0),
     discount_type: z.enum(['fixed', 'percentage']).default('fixed'),
     notes: z.string().max(500).optional().nullable(),

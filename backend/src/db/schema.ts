@@ -325,6 +325,29 @@ export const shifts = pgTable('shifts', {
   notes: text('notes'),
 });
 
+// 23b. Cash Sessions
+export const cashSessions = pgTable('cash_sessions', {
+  id: text('id').primaryKey(),
+  openedByUserId: text('opened_by_user_id').references(() => profiles.id),
+  openedByName: text('opened_by_name').notNull(),
+  openedAt: timestamp('opened_at').defaultNow(),
+  closedAt: timestamp('closed_at'),
+  openingFloat: doublePrecision('opening_float').notNull().default(1000.0),
+  cashSales: doublePrecision('cash_sales').default(0),
+  telebirrSales: doublePrecision('telebirr_sales').default(0),
+  totalSales: doublePrecision('total_sales').default(0),
+  expectedCash: doublePrecision('expected_cash').default(1000.0),
+  closingCash: doublePrecision('closing_cash'),
+  difference: doublePrecision('difference'),
+  notes: text('notes'),
+  status: text('status').notNull().default('open'), // 'open', 'closed'
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => [
+  index('idx_cash_sessions_status').on(table.status),
+  index('idx_cash_sessions_opened_at').on(table.openedAt),
+]);
+
 // 24. Audit Logs
 export const auditLogs = pgTable('audit_logs', {
   id: text('id').primaryKey(),

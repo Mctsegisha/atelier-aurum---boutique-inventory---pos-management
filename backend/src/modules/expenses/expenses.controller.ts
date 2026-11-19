@@ -21,6 +21,14 @@ export class ExpensesController {
     }
   };
 
+  public createCategory = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      res.status(201).json(this.service.createCategory(req.user!, req.body));
+    } catch (err) {
+      next(err);
+    }
+  };
+
   public createExpense = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       res.status(201).json(this.service.createExpense(req.user!, req.body));
@@ -40,4 +48,3 @@ export class ExpensesController {
 }
 
 export const expensesController = new ExpensesController();
-

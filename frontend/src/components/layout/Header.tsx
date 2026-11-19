@@ -56,7 +56,7 @@ export function Header({ currentView, onNavigate }: HeaderProps) {
       case 'employees': return 'Staff & Roles';
       case 'settings': return 'Store Settings';
       case 'audit': return 'Security Audit Logs';
-      case 'shift': return 'Register & Shift';
+      case 'shift': return 'Cash Management';
       case 'profile': return 'My Profile';
       default: return 'Hirbit Store';
     }

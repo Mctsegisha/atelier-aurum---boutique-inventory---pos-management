@@ -338,6 +338,27 @@ CREATE TABLE IF NOT EXISTS shifts (
   FOREIGN KEY (user_id) REFERENCES profiles(id)
 );
 
+-- 23b. Cash Sessions
+CREATE TABLE IF NOT EXISTS cash_sessions (
+  id TEXT PRIMARY KEY,
+  opened_by_user_id TEXT,
+  opened_by_name TEXT NOT NULL,
+  opened_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  closed_at DATETIME,
+  opening_float REAL NOT NULL DEFAULT 1000.0,
+  cash_sales REAL DEFAULT 0.0,
+  telebirr_sales REAL DEFAULT 0.0,
+  total_sales REAL DEFAULT 0.0,
+  expected_cash REAL DEFAULT 1000.0,
+  closing_cash REAL,
+  difference REAL,
+  notes TEXT,
+  status TEXT NOT NULL DEFAULT 'open', -- 'open', 'closed'
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (opened_by_user_id) REFERENCES profiles(id)
+);
+
 -- 24. Audit Logs
 CREATE TABLE IF NOT EXISTS audit_logs (
   id TEXT PRIMARY KEY,
@@ -397,5 +418,7 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_user ON audit_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_sales_cashier_created ON sales(cashier_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_inventory_quantity_min ON inventory(quantity, min_threshold);
 CREATE INDEX IF NOT EXISTS idx_shifts_user_status ON shifts(user_id, status);
+CREATE INDEX IF NOT EXISTS idx_cash_sessions_status ON cash_sessions(status);
+CREATE INDEX IF NOT EXISTS idx_cash_sessions_opened_at ON cash_sessions(opened_at DESC);
 CREATE INDEX IF NOT EXISTS idx_products_status_category ON products(status, category_id);
 CREATE INDEX IF NOT EXISTS idx_expenses_category_date ON expenses(category_id, expense_date);

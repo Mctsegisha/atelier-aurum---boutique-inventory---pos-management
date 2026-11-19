@@ -342,6 +342,28 @@ CREATE TABLE IF NOT EXISTS shifts (
 );
 CREATE INDEX IF NOT EXISTS idx_shifts_user_status ON shifts(user_id, status);
 
+-- 23b. Cash Sessions
+CREATE TABLE IF NOT EXISTS cash_sessions (
+  id TEXT PRIMARY KEY,
+  opened_by_user_id TEXT REFERENCES profiles(id),
+  opened_by_name TEXT NOT NULL,
+  opened_at TIMESTAMPTZ DEFAULT NOW(),
+  closed_at TIMESTAMPTZ,
+  opening_float NUMERIC(12, 2) NOT NULL DEFAULT 1000.00,
+  cash_sales NUMERIC(12, 2) DEFAULT 0.00,
+  telebirr_sales NUMERIC(12, 2) DEFAULT 0.00,
+  total_sales NUMERIC(12, 2) DEFAULT 0.00,
+  expected_cash NUMERIC(12, 2) DEFAULT 1000.00,
+  closing_cash NUMERIC(12, 2),
+  difference NUMERIC(12, 2),
+  notes TEXT,
+  status TEXT NOT NULL DEFAULT 'open',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_cash_sessions_status ON cash_sessions(status);
+CREATE INDEX IF NOT EXISTS idx_cash_sessions_opened_at ON cash_sessions(opened_at DESC);
+
 -- 24. Audit Logs
 CREATE TABLE IF NOT EXISTS audit_logs (
   id TEXT PRIMARY KEY,

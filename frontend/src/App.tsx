@@ -16,7 +16,7 @@ import { ReportsView } from './views/ReportsView.tsx';
 import { EmployeesView } from './views/EmployeesView.tsx';
 import { SettingsView } from './views/SettingsView.tsx';
 import { AuditLogsView } from './views/AuditLogsView.tsx';
-import { ShiftView } from './views/ShiftView.tsx';
+import { CashManagementView } from './views/CashManagementView.tsx';
 import { ProfileView } from './views/ProfileView.tsx';
 import { ErrorBoundary } from './components/common/ErrorBoundary.tsx';
 import {
@@ -132,7 +132,7 @@ function MainApp() {
       case 'audit':
         return <AuditLogsView />;
       case 'shift':
-        return <ShiftView />;
+        return <CashManagementView />;
       case 'profile':
         return <ProfileView />;
       default:

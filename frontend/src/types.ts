@@ -398,6 +398,25 @@ export interface Shift {
   notes?: string;
 }
 
+export interface CashSession {
+  id: string;
+  opened_by_user_id?: string | null;
+  opened_by_name: string;
+  opened_at: string;
+  closed_at?: string | null;
+  opening_float: number;
+  cash_sales: number;
+  telebirr_sales: number;
+  total_sales: number;
+  expected_cash: number;
+  closing_cash?: number | null;
+  difference?: number | null;
+  notes?: string | null;
+  status: 'open' | 'closed';
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface BusinessSettings {
   id: string;
   business_name: string;

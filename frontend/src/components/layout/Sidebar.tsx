@@ -14,6 +14,7 @@ import {
   Settings,
   History,
   Clock,
+  Wallet,
   Building2,
   ChevronDown,
   ChevronsLeft,
@@ -63,14 +64,14 @@ export function Sidebar({ currentView, onNavigate }: SidebarProps) {
         {
           title: 'FINANCE',
           items: [
-            { id: 'sales', label: 'My Sales History', icon: Receipt }
+            { id: 'sales', label: 'My Sales History', icon: Receipt },
+            { id: 'shift', label: 'Cash Management', icon: Wallet }
           ]
         },
         {
           title: 'MANAGE',
           items: [
             { id: 'customers', label: 'Customers', icon: Users },
-            { id: 'shift', label: 'Register & Shift', icon: Clock },
             { id: 'profile', label: 'My Profile', icon: UserCheck }
           ]
         }
@@ -97,6 +98,7 @@ export function Sidebar({ currentView, onNavigate }: SidebarProps) {
           title: 'FINANCE',
           items: [
             { id: 'sales', label: 'Sales & Returns', icon: Receipt },
+            { id: 'shift', label: 'Cash Management', icon: Wallet },
             { id: 'expenses', label: 'Store Expenses', icon: ReceiptText },
             { id: 'reports', label: 'Store Reports', icon: BarChart3 }
           ]
@@ -130,6 +132,7 @@ export function Sidebar({ currentView, onNavigate }: SidebarProps) {
         title: 'FINANCE',
         items: [
           { id: 'sales', label: 'Sales & Refunds', icon: Receipt },
+          { id: 'shift', label: 'Cash Management', icon: Wallet },
           { id: 'expenses', label: 'Operational Expenses', icon: ReceiptText },
           { id: 'reports', label: 'Financial & Analytics', icon: BarChart3 }
         ]

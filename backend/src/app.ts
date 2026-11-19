@@ -18,10 +18,12 @@ import salesRouter from './modules/sales/sales.routes.js';
 import customersRouter from './modules/customers/customers.routes.js';
 import suppliersRouter from './modules/suppliers/suppliers.routes.js';
 import expensesRouter from './modules/expenses/expenses.routes.js';
+import expenseCategoriesRouter from './modules/expenses/expense-categories.routes.js';
 import reportsRouter from './modules/reports/reports.routes.js';
 import usersRouter from './modules/users/users.routes.js';
 import settingsRouter from './modules/settings/settings.routes.js';
 import shiftsRouter from './modules/shifts/shifts.routes.js';
+import cashSessionsRouter from './modules/cash-sessions/cash-sessions.routes.js';
 import auditRouter from './modules/audit/audit.routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -60,10 +62,12 @@ export function createApp(): Express {
   app.use('/api/customers', customersRouter);
   app.use('/api/suppliers', suppliersRouter);
   app.use('/api/expenses', expensesRouter);
+  app.use('/api/expense-categories', expenseCategoriesRouter);
   app.use('/api/reports', reportsRouter);
   app.use('/api/users', usersRouter);
   app.use('/api/settings', settingsRouter);
   app.use('/api/shifts', shiftsRouter);
+  app.use('/api/cash-sessions', cashSessionsRouter);
   app.use('/api/audit', auditRouter);
 
   // 6. Production Static Assets Serving (SPA Support)

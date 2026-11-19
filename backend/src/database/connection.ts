@@ -409,6 +409,55 @@ export function initDatabase(): void {
 
     logger.info(`[Database] Neon PostgreSQL connected successfully to database "${check?.db_name}" at ${check?.current_time}`);
     logger.info(`[Database] Verified ${tableCount?.count ?? 0} active relational tables on Neon PostgreSQL.`);
+
+    // Ensure cash_sessions table and indexes exist
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS cash_sessions (
+        id TEXT PRIMARY KEY,
+        opened_by_user_id TEXT,
+        opened_by_name TEXT NOT NULL,
+        opened_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        closed_at TIMESTAMP WITH TIME ZONE,
+        opening_float DOUBLE PRECISION NOT NULL DEFAULT 1000.0,
+        cash_sales DOUBLE PRECISION DEFAULT 0.0,
+        telebirr_sales DOUBLE PRECISION DEFAULT 0.0,
+        total_sales DOUBLE PRECISION DEFAULT 0.0,
+        expected_cash DOUBLE PRECISION DEFAULT 1000.0,
+        closing_cash DOUBLE PRECISION,
+        difference DOUBLE PRECISION,
+        notes TEXT,
+        status TEXT NOT NULL DEFAULT 'open',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_cash_sessions_status ON cash_sessions(status);
+      CREATE INDEX IF NOT EXISTS idx_cash_sessions_opened_at ON cash_sessions(opened_at DESC);
+    `);
+
+    // Ensure 11 standard default expense categories exist
+    const defaultExpenseCategories = [
+      { id: 'ec_electricity', name: 'Electricity' },
+      { id: 'ec_internet_phone', name: 'Internet & phone' },
+      { id: 'ec_licences_fees', name: 'Licences & fees' },
+      { id: 'ec_maintenance', name: 'Maintenance' },
+      { id: 'ec_other', name: 'Other' },
+      { id: 'ec_rent', name: 'Rent' },
+      { id: 'ec_salaries', name: 'Salaries' },
+      { id: 'ec_transport', name: 'Transport' },
+      { id: 'ec_water', name: 'Water' },
+      { id: 'ec_sample_operating_costs', name: 'Sample operating costs' },
+      { id: 'ec_sample_rent', name: 'Sample rent' }
+    ];
+
+    for (const cat of defaultExpenseCategories) {
+      try {
+        db.prepare(`
+          INSERT INTO expense_categories (id, name, description)
+          VALUES (?, ?, ?)
+          ON CONFLICT (name) DO NOTHING
+        `).run(cat.id, cat.name, cat.name);
+      } catch {}
+    }
   } catch (error) {
     logger.error('[Database Init Failed - Cannot connect to Neon PostgreSQL]', error);
     throw error;
