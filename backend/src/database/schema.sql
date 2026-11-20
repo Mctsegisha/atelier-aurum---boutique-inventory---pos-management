@@ -185,6 +185,8 @@ CREATE TABLE IF NOT EXISTS customers (
   birthday TEXT,
   loyalty_points INTEGER DEFAULT 0,
   total_spent REAL DEFAULT 0.0,
+  outstanding_balance REAL DEFAULT 0.0,
+  due_date TEXT,
   notes TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );

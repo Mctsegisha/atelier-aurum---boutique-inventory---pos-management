@@ -458,6 +458,14 @@ export function initDatabase(): void {
         `).run(cat.id, cat.name, cat.name);
       } catch {}
     }
+
+    // Ensure customers table has outstanding_balance and due_date columns
+    try {
+      db.exec(`
+        ALTER TABLE customers ADD COLUMN IF NOT EXISTS outstanding_balance DOUBLE PRECISION DEFAULT 0.0;
+        ALTER TABLE customers ADD COLUMN IF NOT EXISTS due_date TEXT;
+      `);
+    } catch {}
   } catch (error) {
     logger.error('[Database Init Failed - Cannot connect to Neon PostgreSQL]', error);
     throw error;

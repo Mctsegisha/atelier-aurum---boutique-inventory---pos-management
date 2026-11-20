@@ -6,11 +6,10 @@ import { formatCurrency } from '../lib/currency.ts';
 import {
   Wallet,
   Clock,
-  User,
+  ArrowUpCircle,
   X,
   AlertCircle,
-  RefreshCw,
-  Plus
+  RefreshCw
 } from 'lucide-react';
 
 export function formatSessionDuration(openedAt: string, closedAt?: string | null): string {
@@ -19,11 +18,12 @@ export function formatSessionDuration(openedAt: string, closedAt?: string | null
   const diffMs = Math.max(0, end - start);
   const totalMins = Math.floor(diffMs / (1000 * 60));
 
-  if (totalMins < 1) {
+  if (!closedAt && totalMins < 1) {
     return 'less than a minute';
   }
-  const hours = Math.floor(totalMins / 60);
-  const mins = totalMins % 60;
+  const effectiveMins = closedAt && totalMins < 1 ? 1 : totalMins;
+  const hours = Math.floor(effectiveMins / 60);
+  const mins = effectiveMins % 60;
   return `${hours}h ${mins}m`;
 }
 
@@ -134,7 +134,7 @@ export function CashManagementView() {
     <div className="p-6 max-w-7xl mx-auto space-y-6 font-sans">
       {/* 1. Page Header & Subtitle */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 font-sans tracking-tight">Cash Management</h1>
+        <h1 className="text-xl font-bold text-gray-900 font-sans tracking-tight">Cash Management</h1>
         <p className="text-xs text-gray-500 font-sans mt-0.5">
           Track cash sessions and reconcile daily balances.
         </p>
@@ -159,22 +159,19 @@ export function CashManagementView() {
       <div className="bg-white rounded-xl border border-gray-200 shadow-xs overflow-hidden">
         {/* Top Header Row of Card */}
         <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-700">
-              <Wallet className="w-4 h-4" />
-            </div>
+          <div className="flex items-center gap-2 text-gray-800">
+            <Wallet className="w-4 h-4 stroke-[1.8]" />
             <span className="text-sm font-bold text-gray-900 font-sans">Current Session</span>
           </div>
 
           {activeSession ? (
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 font-sans">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Session Active</span>
-            </div>
+            <span className="text-xs font-semibold text-[#16803d] font-sans">
+              Session Active
+            </span>
           ) : (
-            <div className="px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-500 text-xs font-medium font-sans">
+            <span className="px-2.5 py-0.5 rounded-full bg-[#F3F4F6] text-gray-500 text-[11px] font-medium font-sans border border-gray-200/60">
               No Active Session
-            </div>
+            </span>
           )}
         </div>
 
@@ -190,71 +187,71 @@ export function CashManagementView() {
             {/* Top 3-Column Row: Opening Float, Time Open, Opened By */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Card 1: Opening Float */}
-              <div className="p-4 rounded-xl border border-gray-100 bg-[#FBFBFA] flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-base font-sans shrink-0">
+              <div className="p-4 rounded-xl border border-gray-200/80 bg-white flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-full bg-[#EBF3EE] text-[#16803d] flex items-center justify-center font-bold text-base font-sans shrink-0">
                   $
                 </div>
                 <div>
-                  <span className="text-[11px] text-gray-500 font-sans block leading-tight">Opening Float</span>
-                  <span className="text-base font-bold text-gray-900 font-mono tabular-nums leading-tight mt-0.5 block">
+                  <span className="text-xs text-gray-500 font-sans block leading-tight">Opening Float</span>
+                  <span className="text-base font-bold text-gray-900 font-mono tabular-nums leading-tight mt-1 block">
                     {formatCurrency(activeSession.opening_float)}
                   </span>
                 </div>
               </div>
 
               {/* Card 2: Time Open */}
-              <div className="p-4 rounded-xl border border-gray-100 bg-[#FBFBFA] flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
-                  <Clock className="w-5 h-5" />
+              <div className="p-4 rounded-xl border border-gray-200/80 bg-white flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-full bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center shrink-0">
+                  <Clock className="w-5 h-5 stroke-[2]" />
                 </div>
                 <div>
-                  <span className="text-[11px] text-gray-500 font-sans block leading-tight">Time Open</span>
-                  <span className="text-base font-medium text-gray-900 font-mono tabular-nums leading-tight mt-0.5 block">
+                  <span className="text-xs text-gray-500 font-sans block leading-tight">Time Open</span>
+                  <span className="text-base font-medium text-gray-900 font-mono tabular-nums leading-tight mt-1 block">
                     {formatSessionDuration(activeSession.opened_at, activeSession.closed_at)}
                   </span>
                 </div>
               </div>
 
               {/* Card 3: Opened By */}
-              <div className="p-4 rounded-xl border border-gray-100 bg-[#FBFBFA] flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
-                  <User className="w-5 h-5" />
+              <div className="p-4 rounded-xl border border-gray-200/80 bg-white flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-full bg-[#F3E8FF] text-[#9333EA] flex items-center justify-center shrink-0">
+                  <ArrowUpCircle className="w-5 h-5 stroke-[2]" />
                 </div>
                 <div>
-                  <span className="text-[11px] text-gray-500 font-sans block leading-tight">Opened By</span>
-                  <span className="text-sm font-semibold text-gray-900 font-sans leading-tight mt-0.5 block truncate">
+                  <span className="text-xs text-gray-500 font-sans block leading-tight">Opened By</span>
+                  <span className="text-sm font-bold text-gray-900 font-sans leading-tight mt-1 block truncate">
                     {activeSession.opened_by_name || user?.full_name || 'Staff'}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Middle 4-Column Breakdown Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-3 pb-3 border-t border-b border-gray-100">
-              <div className="px-2">
-                <span className="text-[11px] text-gray-500 font-sans block">Cash sales</span>
-                <span className="text-base font-bold text-gray-900 font-mono tabular-nums mt-0.5 block">
+            {/* Middle 4-Column Breakdown Row */}
+            <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-gray-200/80 border-t border-b border-gray-200/80 py-3.5">
+              <div className="px-4 py-1">
+                <span className="text-xs text-gray-500 font-sans block">Cash sales</span>
+                <span className="text-base font-bold text-gray-900 font-mono tabular-nums mt-1 block">
                   {formatCurrency(activeSession.cash_sales)}
                 </span>
               </div>
 
-              <div className="px-2 md:border-l md:border-gray-100">
-                <span className="text-[11px] text-gray-500 font-sans block">Telebirr sales</span>
-                <span className="text-base font-bold text-gray-900 font-mono tabular-nums mt-0.5 block">
+              <div className="px-4 py-1">
+                <span className="text-xs text-gray-500 font-sans block">Telebirr sales</span>
+                <span className="text-base font-bold text-gray-900 font-mono tabular-nums mt-1 block">
                   {formatCurrency(activeSession.telebirr_sales)}
                 </span>
               </div>
 
-              <div className="px-2 md:border-l md:border-gray-100">
-                <span className="text-[11px] text-gray-500 font-sans block">Total sales</span>
-                <span className="text-base font-bold text-gray-900 font-mono tabular-nums mt-0.5 block">
+              <div className="px-4 py-1">
+                <span className="text-xs text-gray-500 font-sans block">Total sales</span>
+                <span className="text-base font-bold text-gray-900 font-mono tabular-nums mt-1 block">
                   {formatCurrency(activeSession.total_sales)}
                 </span>
               </div>
 
-              <div className="px-2 md:border-l md:border-gray-100">
-                <span className="text-[11px] text-gray-500 font-sans block">Should be in drawer</span>
-                <span className="text-base font-bold text-gray-900 font-mono tabular-nums mt-0.5 block">
+              <div className="px-4 py-1">
+                <span className="text-xs text-gray-500 font-sans block">Should be in drawer</span>
+                <span className="text-base font-bold text-gray-900 font-mono tabular-nums mt-1 block">
                   {formatCurrency(activeSession.expected_cash)}
                 </span>
               </div>
@@ -262,13 +259,14 @@ export function CashManagementView() {
 
             {/* Helper Text & Action Button */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
-              <p className="text-[11px] text-gray-400 font-sans">
+              <p className="text-xs text-gray-400 font-sans">
                 Telebirr never enters the drawer, so only cash is counted against it.
               </p>
 
               <button
+                type="button"
                 onClick={handleOpenCloseModal}
-                className="px-4 py-2 bg-[#993B32] hover:bg-[#85332B] text-white rounded-md text-xs font-semibold transition-colors shadow-xs cursor-pointer self-end sm:self-auto"
+                className="px-4 py-2 bg-[#9E3127] hover:bg-[#85271F] text-white rounded-md text-xs font-medium transition-colors shadow-xs cursor-pointer self-end sm:self-auto"
               >
                 Close Session
               </button>
@@ -276,9 +274,9 @@ export function CashManagementView() {
           </div>
         ) : (
           /* STATE C: NO ACTIVE SESSION VIEW (Reference Image 3) */
-          <div className="py-10 px-4 flex flex-col items-center justify-center text-center space-y-3">
+          <div className="py-12 px-4 flex flex-col items-center justify-center text-center space-y-3">
             <div className="w-12 h-12 rounded-full bg-[#EBF3EE] text-[#245239] flex items-center justify-center shadow-xs">
-              <Wallet className="w-5 h-5 stroke-[2.2]" />
+              <Wallet className="w-5 h-5 stroke-[2]" />
             </div>
 
             <div className="space-y-1">
@@ -289,8 +287,9 @@ export function CashManagementView() {
             </div>
 
             <button
+              type="button"
               onClick={() => setShowOpenModal(true)}
-              className="mt-1 px-4 py-2 bg-[#234233] hover:bg-[#1A3327] text-white rounded-md text-xs font-medium transition-colors shadow-xs cursor-pointer"
+              className="mt-2 px-4 py-2 bg-[#234233] hover:bg-[#1A3327] text-white rounded-md text-xs font-medium transition-colors shadow-xs cursor-pointer"
             >
               Open Session
             </button>
@@ -392,11 +391,11 @@ export function CashManagementView() {
                             <span className="text-gray-400 font-normal">--</span>
                           ) : diff !== null ? (
                             diff >= 0 ? (
-                              <span className="text-emerald-600 font-semibold">
+                              <span className="text-[#16803d] font-semibold">
                                 +{formatCurrency(diff)}
                               </span>
                             ) : (
-                              <span className="text-rose-600 font-semibold">
+                              <span className="text-[#DC2626] font-semibold">
                                 -{formatCurrency(Math.abs(diff))}
                               </span>
                             )
@@ -408,9 +407,8 @@ export function CashManagementView() {
                         {/* STATUS */}
                         <td className="py-3.5 px-4 whitespace-nowrap">
                           {isOpen ? (
-                            <span className="inline-flex items-center gap-1.5 text-emerald-600 text-xs font-medium font-sans">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                              <span>Open</span>
+                            <span className="text-[#16803d] text-xs font-medium font-sans">
+                              Open
                             </span>
                           ) : (
                             <span className="inline-block px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-[11px] font-medium font-sans">
@@ -433,7 +431,7 @@ export function CashManagementView() {
       {/* ============================================================== */}
       {showCloseModal && activeSession && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
-          <div className="bg-white rounded-xl border border-gray-200 max-w-md w-full p-6 space-y-5 shadow-2xl">
+          <div className="bg-white rounded-xl border border-gray-200 max-w-md w-full p-6 space-y-4 shadow-2xl">
             {/* Modal Header with Close (x) button */}
             <div className="flex items-start justify-between">
               <div>
@@ -452,16 +450,16 @@ export function CashManagementView() {
             </div>
 
             {/* Summary Box (4 stacked rows in a bordered container) */}
-            <div className="border border-gray-200 rounded-lg p-3.5 space-y-2 bg-white">
+            <div className="border border-gray-200 rounded-lg p-3.5 space-y-2.5 bg-white">
               <div className="flex justify-between items-center text-xs">
-                <span className="text-gray-600 font-sans">Opening Float</span>
+                <span className="text-gray-700 font-sans">Opening Float</span>
                 <span className="font-mono tabular-nums text-gray-900 font-semibold">
                   {formatCurrency(activeSession.opening_float)}
                 </span>
               </div>
 
               <div className="flex justify-between items-center text-xs">
-                <span className="text-gray-600 font-sans">Total sales</span>
+                <span className="text-gray-700 font-sans">Total sales</span>
                 <span className="font-mono tabular-nums text-gray-900 font-semibold">
                   {formatCurrency(activeSession.total_sales)}
                 </span>
@@ -474,7 +472,7 @@ export function CashManagementView() {
                 </span>
               </div>
 
-              <div className="flex justify-between items-center text-xs pt-2 border-t border-gray-100">
+              <div className="flex justify-between items-center text-xs pt-2.5 border-t border-gray-100">
                 <span className="font-bold text-gray-900 font-sans">Should be in drawer</span>
                 <span className="font-bold font-mono tabular-nums text-gray-900 text-sm">
                   {formatCurrency(activeSession.expected_cash)}
@@ -518,14 +516,14 @@ export function CashManagementView() {
                 <button
                   type="button"
                   onClick={() => setShowCloseModal(false)}
-                  className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer font-sans"
+                  className="px-4 py-2 border border-gray-200 rounded-md text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer font-sans"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isClosing}
-                  className="px-4 py-2 bg-[#BA7067] hover:bg-[#A9635A] text-white rounded-lg text-xs font-medium transition-colors shadow-xs cursor-pointer font-sans disabled:opacity-50"
+                  className="px-4 py-2 bg-[#BA7067] hover:bg-[#A8635B] text-white rounded-md text-xs font-medium transition-colors shadow-xs cursor-pointer font-sans disabled:opacity-50"
                 >
                   {isClosing ? 'Closing...' : 'Close Session'}
                 </button>
@@ -540,7 +538,7 @@ export function CashManagementView() {
       {/* ============================================================== */}
       {showOpenModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
-          <div className="bg-white rounded-xl border border-gray-200 max-w-md w-full p-6 space-y-5 shadow-2xl">
+          <div className="bg-white rounded-xl border border-gray-200 max-w-md w-full p-6 space-y-4 shadow-2xl">
             {/* Header */}
             <div className="flex items-start justify-between">
               <div>
@@ -597,14 +595,14 @@ export function CashManagementView() {
                 <button
                   type="button"
                   onClick={() => setShowOpenModal(false)}
-                  className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer font-sans"
+                  className="px-4 py-2 border border-gray-200 rounded-md text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer font-sans"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isOpening}
-                  className="px-4 py-2 bg-[#234233] hover:bg-[#1A3327] text-white rounded-lg text-xs font-medium transition-colors shadow-xs cursor-pointer font-sans disabled:opacity-50"
+                  className="px-4 py-2 bg-[#234233] hover:bg-[#1A3327] text-white rounded-md text-xs font-medium transition-colors shadow-xs cursor-pointer font-sans disabled:opacity-50"
                 >
                   {isOpening ? 'Opening...' : 'Open Session'}
                 </button>

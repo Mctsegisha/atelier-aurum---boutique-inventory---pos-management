@@ -131,6 +131,7 @@ function MainApp() {
         return <SettingsView />;
       case 'audit':
         return <AuditLogsView />;
+      case 'cash-management':
       case 'shift':
         return <CashManagementView />;
       case 'profile':

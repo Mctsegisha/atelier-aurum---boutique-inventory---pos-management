@@ -182,6 +182,8 @@ export const customers = pgTable('customers', {
   birthday: text('birthday'),
   loyaltyPoints: integer('loyalty_points').default(0),
   totalSpent: doublePrecision('total_spent').default(0),
+  outstandingBalance: doublePrecision('outstanding_balance').default(0),
+  dueDate: text('due_date'),
   notes: text('notes'),
   createdAt: timestamp('created_at').defaultNow(),
 });

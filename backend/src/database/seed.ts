@@ -672,14 +672,16 @@ export function seedSampleTransactions() {
   try {
     // 9. Customers
     const insertCust = db.prepare(`
-      INSERT INTO customers (id, full_name, phone, email, address, birthday, loyalty_points, total_spent, notes)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT (id) DO NOTHING
+      INSERT INTO customers (id, full_name, phone, email, address, birthday, loyalty_points, total_spent, outstanding_balance, due_date, notes)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT (id) DO UPDATE SET
+        outstanding_balance = EXCLUDED.outstanding_balance,
+        due_date = EXCLUDED.due_date
     `);
-    insertCust.run('c_1', 'Lady Genevieve Sterling', '+1 (555) 912-3049', 'g.sterling@mayfair.co.uk', '744 Park Avenue, Penthouse B, New York', '1988-06-14', 450, 4280.0, 'Prefers private salon viewings. Likes Champagne tones.');
-    insertCust.run('c_2', 'Dr. Sebastian Vance', '+1 (555) 843-1190', 'sebastian.vance@chicago.edu', '120 E Delaware Pl, Chicago, IL', '1982-11-20', 180, 1540.0, 'Tailored size 40R / Medium fits.');
-    insertCust.run('c_3', 'Elena Rostova', '+1 (555) 438-7261', 'elena.rostova@designstudio.com', '45 Mercer Street, SoHo, NY', '1992-03-05', 320, 2980.0, 'Regular client for seasonal outerwear and leatherware.');
-    insertCust.run('c_4', 'Marcus Aurelius Thorne', '+1 (555) 231-8840', 'm.thorne@capitalholdings.com', '100 Worth Avenue, Palm Beach, FL', '1975-09-12', 590, 5600.0, 'VIP Platinum Tier member.');
+    insertCust.run('c_1', 'Lady Genevieve Sterling', '+1 (555) 912-3049', 'g.sterling@mayfair.co.uk', '744 Park Avenue, Penthouse B, New York', '1988-06-14', 450, 4280.0, 14500.0, '2026-11-28', 'Prefers private salon viewings. Likes Champagne tones.');
+    insertCust.run('c_2', 'Dr. Sebastian Vance', '+1 (555) 843-1190', 'sebastian.vance@chicago.edu', '120 E Delaware Pl, Chicago, IL', '1982-11-20', 180, 1540.0, 6200.0, '2026-11-15', 'Tailored size 40R / Medium fits.');
+    insertCust.run('c_3', 'Elena Rostova', '+1 (555) 438-7261', 'elena.rostova@designstudio.com', '45 Mercer Street, SoHo, NY', '1992-03-05', 320, 2980.0, 3800.0, '2026-11-10', 'Regular client for seasonal outerwear and leatherware.');
+    insertCust.run('c_4', 'Marcus Aurelius Thorne', '+1 (555) 231-8840', 'm.thorne@capitalholdings.com', '100 Worth Avenue, Palm Beach, FL', '1975-09-12', 590, 5600.0, 0.0, null, 'VIP Platinum Tier member.');
 
     // 10. Sample Sales Transactions with realistic audit trail
     const insertSale = db.prepare(`
