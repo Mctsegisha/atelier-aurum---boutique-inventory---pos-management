@@ -1,9 +1,81 @@
 import { ReportsRepository, reportsRepository } from './reports.repository.js';
 import { AuthUser } from '../../middleware/authenticate.js';
+import { SettleCreditInput } from './reports.schemas.js';
+import { auditService } from '../audit/audit.service.js';
+import { NotFoundError, BadRequestError } from '../../errors/AppError.js';
 
 export class ReportsService {
   constructor(private readonly repo: ReportsRepository = reportsRepository) {}
 
+  // ==========================================
+  // TAB 1: SALES REPORT
+  // ==========================================
+  public getSalesReport(period: string, groupBy: 'day' | 'week' | 'month' = 'day', startDate?: string, endDate?: string) {
+    const dateClause = this.repo.buildDateClause(period, startDate, endDate, 's');
+    return this.repo.getSalesReportData(dateClause, groupBy);
+  }
+
+  // ==========================================
+  // TAB 2: P&L REPORT
+  // ==========================================
+  public getPnlReport(period: string, startDate?: string, endDate?: string) {
+    const dateClause = this.repo.buildDateClause(period, startDate, endDate, 's');
+    return this.repo.getPnlReportData(dateClause, period, startDate, endDate);
+  }
+
+  // ==========================================
+  // TAB 3: STOCK VALUE REPORT
+  // ==========================================
+  public getStockValueReport() {
+    return this.repo.getStockValueReportData();
+  }
+
+  // ==========================================
+  // TAB 4: CHANNELS REPORT
+  // ==========================================
+  public getChannelsReport(period: string, startDate?: string, endDate?: string) {
+    const dateClause = this.repo.buildDateClause(period, startDate, endDate, 's');
+    return this.repo.getChannelsReportData(dateClause);
+  }
+
+  // ==========================================
+  // TAB 5: OWED TO US REPORT
+  // ==========================================
+  public getOwedToUsReport() {
+    return this.repo.getOwedToUsReportData();
+  }
+
+  public settleCustomerCredit(user: AuthUser, input: SettleCreditInput) {
+    const { customer_id, amount, payment_method, notes } = input;
+    if (amount <= 0) {
+      throw new BadRequestError('Settlement amount must be positive.');
+    }
+
+    const updated = this.repo.settleCustomerCredit(customer_id, amount);
+    if (!updated) {
+      throw new NotFoundError(`Customer with ID ${customer_id} not found.`);
+    }
+
+    auditService.log(user.id, 'SETTLE_CUSTOMER_CREDIT', 'CUSTOMER', customer_id, {
+      amount,
+      payment_method,
+      notes,
+      remaining_balance: updated.outstanding_balance
+    });
+
+    return updated;
+  }
+
+  // ==========================================
+  // TAB 6: WASTAGE REPORT
+  // ==========================================
+  public getWastageReport(atRiskDays = 30) {
+    return this.repo.getWastageReportData(atRiskDays);
+  }
+
+  // ==========================================
+  // BACKWARDS-COMPATIBLE DASHBOARD REPORT
+  // ==========================================
   public getDashboardData(user: AuthUser, period: string, startDate?: string, endDate?: string) {
     const role = user.role;
     const dateClause = this.repo.buildDateClause(period, startDate, endDate, 's');
@@ -46,7 +118,6 @@ export class ReportsService {
     const totalItemsData = this.repo.getTotalItemsPrice(dateClause);
     const slowMovingStock = this.repo.getSlowMovingStock();
 
-    // Standardized KPI metrics matching DashboardView & ReportsView expectations
     const stats = {
       total_revenue: salesSummary.total_revenue,
       gross_sales: salesSummary.gross_sales,
@@ -67,12 +138,11 @@ export class ReportsService {
       total_variants: generalStats.totalVariants,
       total_products: generalStats.totalProducts,
       low_stock_count: generalStats.lowStockCount,
-      slow_moving_count: generalStats.slowMovingCount,
+      slowMovingCount: generalStats.slowMovingCount,
       inventory_retail_value: generalStats.inventoryRetailValue,
       inventory_cost_value: generalStats.inventoryCostValue
     };
 
-    // Formatted chart structures required by Recharts components
     const charts = {
       sales_over_time: salesOverTime,
       sales_by_category: categoryBreakdown.map((c) => ({
@@ -100,37 +170,11 @@ export class ReportsService {
       slow_moving_stock: slowMovingStock
     };
 
-    // Sales role specific context
-    const activeShift = role === 'sales' ? this.repo.getActiveShift(user.id) : null;
-    const myRecentSales = role === 'sales' ? this.repo.getCashierRecentSales(user.id) : [];
-
     return {
-      role,
       period,
       stats,
       charts,
-      financials: {
-        totalRevenue: salesSummary.total_revenue,
-        grossSales: salesSummary.gross_sales,
-        totalDiscounts: salesSummary.total_discounts,
-        totalTax: salesSummary.total_tax,
-        totalRefunds: salesSummary.total_refunds,
-        netSales,
-        totalCogs,
-        grossProfit,
-        grossMarginPercent,
-        totalExpenses,
-        netProfit,
-        totalTransactions: salesSummary.total_transactions,
-        averageBasket
-      },
-      categoryBreakdown,
-      topGarments,
-      paymentBreakdown,
-      staffSales,
-      recentSales,
-      activeShift: activeShift || null,
-      myRecentSales
+      recent_sales: recentSales
     };
   }
 }

@@ -457,3 +457,148 @@ export interface AuditLog {
   ip_address?: string;
   created_at: string;
 }
+
+// ==========================================
+// REPORTS MODULE V2 TYPED INTERFACES
+// ==========================================
+
+export interface SalesReportGroupedBar {
+  date: string;
+  label: string;
+  sales_count: number;
+  revenue: number;
+  cost: number;
+  gross_profit: number;
+  margin_percent: number;
+}
+
+export interface SalesReportBreakdownRow {
+  date: string;
+  label: string;
+  sales_count: number;
+  revenue: number;
+  cost: number;
+  gross_profit: number;
+  margin_percent: number;
+}
+
+export interface SalesReportTopEarner {
+  product_name: string;
+  units_sold: number;
+  revenue: number;
+  gross_profit: number;
+}
+
+export interface SalesReportHourlyPoint {
+  hour: string;
+  hour_24: number;
+  sales_count: number;
+  revenue: number;
+}
+
+export interface SalesReportResponse {
+  kpis: {
+    total_revenue: number;
+    total_gross_profit: number;
+    avg_daily_sales: number;
+  };
+  grouped_bars: SalesReportGroupedBar[];
+  breakdown_table: SalesReportBreakdownRow[];
+  insights: {
+    average_sale: number;
+    items_per_sale: number;
+    money_in_stock_nothing_sold: number;
+    at_risk_dead_stock: number;
+    pareto_insight: string;
+    busiest_insight: string;
+    top_earners: SalesReportTopEarner[];
+    hourly_distribution: SalesReportHourlyPoint[];
+  };
+}
+
+export interface PnlExpenseCategory {
+  category: string;
+  amount: number;
+}
+
+export interface PnlProductProfit {
+  product_name: string;
+  qty_sold: number;
+  revenue: number;
+  cost: number;
+  gross_profit: number;
+  margin_percent: number;
+}
+
+export interface PnlReportResponse {
+  statement: {
+    revenue: number;
+    sales_count: number;
+    cogs: number;
+    gross_profit: number;
+    gross_margin_percent: number;
+    operating_expenses: number;
+    wastage_written_off: number;
+    net_profit: number;
+    net_margin_percent: number;
+  };
+  where_expenses_went: PnlExpenseCategory[];
+  profit_by_product: PnlProductProfit[];
+}
+
+export interface StockValueReportResponse {
+  cost_of_stock_on_hand: number;
+  value_at_retail: number;
+  markup_if_all_sells: number;
+  markup_on_cost_percent: number;
+  total_units: number;
+  total_products: number;
+  dead_stock_value: number;
+  dead_stock_units: number;
+}
+
+export interface ChannelBreakdownItem {
+  channel: string;
+  channel_key: string;
+  sales_count: number;
+  share_percent: number;
+  collected: number;
+  note?: string;
+}
+
+export interface ChannelsReportResponse {
+  taken_in_total: number;
+  channels: ChannelBreakdownItem[];
+}
+
+export interface ReceivableCustomer {
+  customer_id: string;
+  customer_name: string;
+  phone?: string;
+  email?: string;
+  due_date: string;
+  outstanding: number;
+  is_overdue: boolean;
+  days_overdue?: number;
+}
+
+export interface OwedToUsReportResponse {
+  total_owed: number;
+  receivables: ReceivableCustomer[];
+}
+
+export interface WastageReasonBreakdown {
+  reason: string;
+  units: number;
+  cost: number;
+}
+
+export interface WastageReportResponse {
+  at_risk_value: number;
+  at_risk_revenue: number;
+  expired_not_written_off: number;
+  written_off: number;
+  total_lost: number;
+  breakdown: WastageReasonBreakdown[];
+}
+
