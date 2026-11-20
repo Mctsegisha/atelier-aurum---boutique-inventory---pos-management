@@ -220,7 +220,7 @@ export function ReportsView() {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6 font-sans">
+    <div className="p-6 lg:p-8 space-y-6 w-full font-sans">
       {/* 1. Page Header & Subtitle */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -403,23 +403,23 @@ export function ReportsView() {
 
               {/* Top 3 KPI Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 rounded-xl border border-gray-200 bg-white shadow-2xs">
-                  <span className="text-xs text-gray-500 font-sans block leading-tight">Total Revenue</span>
-                  <span className="text-lg font-bold text-gray-900 font-mono tabular-nums leading-tight mt-1.5 block">
+                <div className="p-5 rounded-xl border border-gray-200/80 bg-white shadow-2xs">
+                  <span className="text-xs text-gray-500 font-sans block leading-tight font-medium">Total Revenue</span>
+                  <span className="text-2xl font-bold text-gray-900 font-mono tabular-nums leading-tight mt-2 block tracking-tight">
                     {formatCurrency(salesReport.kpis.total_revenue)}
                   </span>
                 </div>
 
-                <div className="p-4 rounded-xl border border-gray-200 bg-white shadow-2xs">
-                  <span className="text-xs text-gray-500 font-sans block leading-tight">Total gross profit</span>
-                  <span className="text-lg font-bold text-gray-900 font-mono tabular-nums leading-tight mt-1.5 block">
+                <div className="p-5 rounded-xl border border-gray-200/80 bg-white shadow-2xs">
+                  <span className="text-xs text-gray-500 font-sans block leading-tight font-medium">Total gross profit</span>
+                  <span className="text-2xl font-bold text-gray-900 font-mono tabular-nums leading-tight mt-2 block tracking-tight">
                     {formatCurrency(salesReport.kpis.total_gross_profit)}
                   </span>
                 </div>
 
-                <div className="p-4 rounded-xl border border-gray-200 bg-white shadow-2xs">
-                  <span className="text-xs text-gray-500 font-sans block leading-tight">Avg Daily Sales</span>
-                  <span className="text-lg font-bold text-gray-900 font-mono tabular-nums leading-tight mt-1.5 block">
+                <div className="p-5 rounded-xl border border-gray-200/80 bg-white shadow-2xs">
+                  <span className="text-xs text-gray-500 font-sans block leading-tight font-medium">Avg Daily Sales</span>
+                  <span className="text-2xl font-bold text-gray-900 font-mono tabular-nums leading-tight mt-2 block tracking-tight">
                     {formatCurrency(salesReport.kpis.avg_daily_sales)}
                   </span>
                 </div>
