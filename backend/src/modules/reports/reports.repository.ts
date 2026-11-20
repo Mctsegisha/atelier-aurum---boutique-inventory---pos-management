@@ -64,16 +64,16 @@ export class ReportsRepository {
       };
     }
     if (period === 'day' || period === 'today') {
-      return { sql: `${tableAlias}.expense_date::date = CURRENT_DATE`, params: [] };
+      return { sql: `${tableAlias}.expense_date = CURRENT_DATE`, params: [] };
     }
     if (period === 'yesterday') {
-      return { sql: `${tableAlias}.expense_date::date = CURRENT_DATE - INTERVAL '1 day'`, params: [] };
+      return { sql: `${tableAlias}.expense_date = CURRENT_DATE - INTERVAL '1 day'`, params: [] };
     }
     if (period === 'week' || period === '7d') {
       return { sql: `${tableAlias}.expense_date >= CURRENT_DATE - INTERVAL '6 days'`, params: [] };
     }
     if (period === 'month') {
-      return { sql: `to_char(${tableAlias}.expense_date::timestamp, 'YYYY-MM') = to_char(CURRENT_DATE, 'YYYY-MM')`, params: [] };
+      return { sql: `to_char(${tableAlias}.expense_date, 'YYYY-MM') = to_char(CURRENT_DATE, 'YYYY-MM')`, params: [] };
     }
     // Default 30 days
     return { sql: `${tableAlias}.expense_date >= CURRENT_DATE - INTERVAL '30 days'`, params: [] };
@@ -87,7 +87,7 @@ export class ReportsRepository {
     const kpiSql = `
       SELECT
         COALESCE(SUM(s.total_amount), 0) as total_revenue,
-        COALESCE(SUM(si.total - (si.quantity * COALESCE(NULLIF(si.cost_price, 0), pv.cost_price, p.cost_price, 0))), 0) as total_gross_profit,
+        COALESCE(SUM(si.total - (si.quantity * COALESCE(NULLIF(si.cost_price, 0), pv.purchase_price, p.purchase_price, 0))), 0) as total_gross_profit,
         COUNT(DISTINCT s.id) as total_transactions,
         COALESCE(SUM(si.quantity), 0) as total_units_sold,
         COUNT(DISTINCT to_char(s.created_at, 'YYYY-MM-DD')) as active_days
@@ -125,8 +125,8 @@ export class ReportsRepository {
         MIN(${labelFormatExpr}) as label,
         COUNT(DISTINCT s.id) as sales_count,
         COALESCE(SUM(s.total_amount), 0) as revenue,
-        COALESCE(SUM(si.quantity * COALESCE(NULLIF(si.cost_price, 0), pv.cost_price, p.cost_price, 0)), 0) as cost,
-        COALESCE(SUM(si.total - (si.quantity * COALESCE(NULLIF(si.cost_price, 0), pv.cost_price, p.cost_price, 0))), 0) as gross_profit
+        COALESCE(SUM(si.quantity * COALESCE(NULLIF(si.cost_price, 0), pv.purchase_price, p.purchase_price, 0)), 0) as cost,
+        COALESCE(SUM(si.total - (si.quantity * COALESCE(NULLIF(si.cost_price, 0), pv.purchase_price, p.purchase_price, 0))), 0) as gross_profit
       FROM sales s
       LEFT JOIN sale_items si ON si.sale_id = s.id
       LEFT JOIN product_variants pv ON si.variant_id = pv.id
@@ -167,7 +167,7 @@ export class ReportsRepository {
 
     // Money in stock nothing sold: cost of active products that made 0 sales in this period
     const unsoldStockSql = `
-      SELECT COALESCE(SUM(i.quantity * COALESCE(pv.cost_price, p.cost_price, 0)), 0) as unsold_cost
+      SELECT COALESCE(SUM(i.quantity * COALESCE(pv.purchase_price, p.purchase_price, 0)), 0) as unsold_cost
       FROM inventory i
       JOIN product_variants pv ON i.variant_id = pv.id
       JOIN products p ON pv.product_id = p.id
@@ -185,14 +185,14 @@ export class ReportsRepository {
 
     // At risk of expiring / dead stock (within 90 days or already expired)
     const deadStockSql = `
-      SELECT COALESCE(SUM(i.quantity * COALESCE(pv.cost_price, p.cost_price, 0)), 0) as dead_cost
+      SELECT COALESCE(SUM(i.quantity * COALESCE(pv.purchase_price, p.purchase_price, 0)), 0) as dead_cost
       FROM inventory i
       JOIN product_variants pv ON i.variant_id = pv.id
       JOIN products p ON pv.product_id = p.id
       WHERE p.status = 'active'
         AND (
-          (i.expiry_date IS NOT NULL AND i.expiry_date::date <= CURRENT_DATE + INTERVAL '90 days')
-          OR (pv.expiry_date IS NOT NULL AND pv.expiry_date::date <= CURRENT_DATE + INTERVAL '90 days')
+          (i.expiry_date IS NOT NULL AND i.expiry_date <= CURRENT_DATE + INTERVAL '90 days')
+          OR (pv.expiry_date IS NOT NULL AND pv.expiry_date <= CURRENT_DATE + INTERVAL '90 days')
         )
     `;
     const deadRow = db.prepare(deadStockSql).get() as any;
@@ -204,7 +204,7 @@ export class ReportsRepository {
         COALESCE(p.name, si.product_name) as name,
         SUM(si.quantity) as units,
         SUM(si.total) as revenue,
-        SUM(si.total - (si.quantity * COALESCE(NULLIF(si.cost_price, 0), pv.cost_price, p.cost_price, 0))) as profit
+        SUM(si.total - (si.quantity * COALESCE(NULLIF(si.cost_price, 0), pv.purchase_price, p.purchase_price, 0))) as profit
       FROM sale_items si
       JOIN sales s ON si.sale_id = s.id
       LEFT JOIN product_variants pv ON si.variant_id = pv.id
@@ -322,7 +322,7 @@ export class ReportsRepository {
       SELECT
         COUNT(DISTINCT s.id) as sales_count,
         COALESCE(SUM(s.total_amount), 0) as revenue,
-        COALESCE(SUM(si.quantity * COALESCE(NULLIF(si.cost_price, 0), pv.cost_price, p.cost_price, 0)), 0) as cogs
+        COALESCE(SUM(si.quantity * COALESCE(NULLIF(si.cost_price, 0), pv.purchase_price, p.purchase_price, 0)), 0) as cogs
       FROM sales s
       LEFT JOIN sale_items si ON si.sale_id = s.id
       LEFT JOIN product_variants pv ON si.variant_id = pv.id
@@ -366,7 +366,7 @@ export class ReportsRepository {
     // 3. Wastage Written Off
     const wastageSql = `
       SELECT
-        COALESCE(SUM(ABS(im.quantity_changed) * COALESCE(pv.cost_price, p.cost_price, 0)), 0) as written_off
+        COALESCE(SUM(ABS(im.quantity_changed) * COALESCE(pv.purchase_price, p.purchase_price, 0)), 0) as written_off
       FROM inventory_movements im
       JOIN product_variants pv ON im.variant_id = pv.id
       JOIN products p ON pv.product_id = p.id
@@ -391,8 +391,8 @@ export class ReportsRepository {
         COALESCE(p.name, si.product_name) as product_name,
         SUM(si.quantity) as qty_sold,
         SUM(si.total) as revenue,
-        SUM(si.quantity * COALESCE(NULLIF(si.cost_price, 0), pv.cost_price, p.cost_price, 0)) as cost,
-        SUM(si.total - (si.quantity * COALESCE(NULLIF(si.cost_price, 0), pv.cost_price, p.cost_price, 0))) as gross_profit
+        SUM(si.quantity * COALESCE(NULLIF(si.cost_price, 0), pv.purchase_price, p.purchase_price, 0)) as cost,
+        SUM(si.total - (si.quantity * COALESCE(NULLIF(si.cost_price, 0), pv.purchase_price, p.purchase_price, 0))) as gross_profit
       FROM sale_items si
       JOIN sales s ON si.sale_id = s.id
       LEFT JOIN product_variants pv ON si.variant_id = pv.id
@@ -444,7 +444,7 @@ export class ReportsRepository {
     // 1. Sellable Active Stock
     const stockSql = `
       SELECT
-        COALESCE(SUM(i.quantity * COALESCE(pv.cost_price, p.cost_price, 0)), 0) as cost_of_stock,
+        COALESCE(SUM(i.quantity * COALESCE(pv.purchase_price, p.purchase_price, 0)), 0) as cost_of_stock,
         COALESCE(SUM(i.quantity * COALESCE(pv.selling_price, p.selling_price, 0)), 0) as retail_value,
         COALESCE(SUM(i.quantity), 0) as total_units,
         COUNT(DISTINCT p.id) as total_products
@@ -452,8 +452,8 @@ export class ReportsRepository {
       JOIN product_variants pv ON i.variant_id = pv.id
       JOIN products p ON pv.product_id = p.id
       WHERE p.status = 'active'
-        AND (i.expiry_date IS NULL OR i.expiry_date::date > CURRENT_DATE)
-        AND (pv.expiry_date IS NULL OR pv.expiry_date::date > CURRENT_DATE)
+        AND (i.expiry_date IS NULL OR i.expiry_date > CURRENT_DATE)
+        AND (pv.expiry_date IS NULL OR pv.expiry_date > CURRENT_DATE)
     `;
     const stockRow = db.prepare(stockSql).get() as any;
 
@@ -468,13 +468,13 @@ export class ReportsRepository {
     // 2. Dead / Expired stock still on shelf
     const expiredShelfSql = `
       SELECT
-        COALESCE(SUM(i.quantity * COALESCE(pv.cost_price, p.cost_price, 0)), 0) as expired_cost,
+        COALESCE(SUM(i.quantity * COALESCE(pv.purchase_price, p.purchase_price, 0)), 0) as expired_cost,
         COALESCE(SUM(i.quantity), 0) as expired_units
       FROM inventory i
       JOIN product_variants pv ON i.variant_id = pv.id
       JOIN products p ON pv.product_id = p.id
-      WHERE (i.expiry_date IS NOT NULL AND i.expiry_date::date <= CURRENT_DATE)
-         OR (pv.expiry_date IS NOT NULL AND pv.expiry_date::date <= CURRENT_DATE)
+      WHERE (i.expiry_date IS NOT NULL AND i.expiry_date <= CURRENT_DATE)
+         OR (pv.expiry_date IS NOT NULL AND pv.expiry_date <= CURRENT_DATE)
     `;
     const expRow = db.prepare(expiredShelfSql).get() as any;
     const deadStockValue = Math.round(Number(expRow?.expired_cost || 0) * 100) / 100;
@@ -624,34 +624,37 @@ export class ReportsRepository {
   // ==========================================
   public getWastageReportData(atRiskDays = 30) {
     // 1. At risk — sell within X days
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() + atRiskDays);
+    const targetDateStr = targetDate.toISOString().split('T')[0];
+
     const atRiskSql = `
       SELECT
-        COALESCE(SUM(i.quantity * COALESCE(pv.cost_price, p.cost_price, 0)), 0) as at_risk_cost,
+        COALESCE(SUM(i.quantity * COALESCE(pv.purchase_price, p.purchase_price, 0)), 0) as at_risk_cost,
         COALESCE(SUM(i.quantity * COALESCE(pv.selling_price, p.selling_price, 0)), 0) as at_risk_revenue
       FROM inventory i
       JOIN product_variants pv ON i.variant_id = pv.id
       JOIN products p ON pv.product_id = p.id
       WHERE p.status = 'active'
         AND (
-          (i.expiry_date IS NOT NULL AND i.expiry_date::date > CURRENT_DATE AND i.expiry_date::date <= CURRENT_DATE + (?::interval))
-          OR (pv.expiry_date IS NOT NULL AND pv.expiry_date::date > CURRENT_DATE AND pv.expiry_date::date <= CURRENT_DATE + (?::interval))
+          (i.expiry_date IS NOT NULL AND i.expiry_date > CURRENT_DATE AND i.expiry_date <= ?)
+          OR (pv.expiry_date IS NOT NULL AND pv.expiry_date > CURRENT_DATE AND pv.expiry_date <= ?)
         )
     `;
-    const intervalStr = `${atRiskDays} days`;
-    const atRiskRow = db.prepare(atRiskSql).get(intervalStr, intervalStr) as any;
+    const atRiskRow = db.prepare(atRiskSql).get(targetDateStr, targetDateStr) as any;
     const atRiskCost = Math.round(Number(atRiskRow?.at_risk_cost || 0) * 100) / 100;
     const atRiskRevenue = Math.round(Number(atRiskRow?.at_risk_revenue || 0) * 100) / 100;
 
     // 2. Expired / dead stock, not yet written off (still in inventory)
     const expiredShelfSql = `
       SELECT
-        COALESCE(SUM(i.quantity * COALESCE(pv.cost_price, p.cost_price, 0)), 0) as expired_cost,
+        COALESCE(SUM(i.quantity * COALESCE(pv.purchase_price, p.purchase_price, 0)), 0) as expired_cost,
         COALESCE(SUM(i.quantity), 0) as expired_units
       FROM inventory i
       JOIN product_variants pv ON i.variant_id = pv.id
       JOIN products p ON pv.product_id = p.id
-      WHERE (i.expiry_date IS NOT NULL AND i.expiry_date::date <= CURRENT_DATE)
-         OR (pv.expiry_date IS NOT NULL AND pv.expiry_date::date <= CURRENT_DATE)
+      WHERE (i.expiry_date IS NOT NULL AND i.expiry_date <= CURRENT_DATE)
+         OR (pv.expiry_date IS NOT NULL AND pv.expiry_date <= CURRENT_DATE)
     `;
     const expRow = db.prepare(expiredShelfSql).get() as any;
     const expiredNotWrittenOff = Math.round(Number(expRow?.expired_cost || 0) * 100) / 100;
@@ -659,7 +662,7 @@ export class ReportsRepository {
     // 3. Written off (historical adjustments down)
     const writtenOffSql = `
       SELECT
-        COALESCE(SUM(ABS(im.quantity_changed) * COALESCE(pv.cost_price, p.cost_price, 0)), 0) as written_off_cost
+        COALESCE(SUM(ABS(im.quantity_changed) * COALESCE(pv.purchase_price, p.purchase_price, 0)), 0) as written_off_cost
       FROM inventory_movements im
       JOIN product_variants pv ON im.variant_id = pv.id
       JOIN products p ON pv.product_id = p.id
@@ -687,7 +690,7 @@ export class ReportsRepository {
           ELSE 'Count Correction'
         END as reason_label,
         COALESCE(SUM(ABS(im.quantity_changed)), 0) as units,
-        COALESCE(SUM(ABS(im.quantity_changed) * COALESCE(pv.cost_price, p.cost_price, 0)), 0) as cost
+        COALESCE(SUM(ABS(im.quantity_changed) * COALESCE(pv.purchase_price, p.purchase_price, 0)), 0) as cost
       FROM inventory_movements im
       JOIN product_variants pv ON im.variant_id = pv.id
       JOIN products p ON pv.product_id = p.id
@@ -781,7 +784,7 @@ export class ReportsRepository {
     const valuation = db.prepare(`
       SELECT
         COALESCE(SUM(i.quantity * COALESCE(pv.selling_price, p.selling_price, 0)), 0) as retail_value,
-        COALESCE(SUM(i.quantity * COALESCE(pv.cost_price, p.cost_price, 0)), 0) as cost_value
+        COALESCE(SUM(i.quantity * COALESCE(pv.purchase_price, p.purchase_price, 0)), 0) as cost_value
       FROM inventory i
       JOIN product_variants pv ON i.variant_id = pv.id
       JOIN products p ON pv.product_id = p.id
@@ -831,7 +834,7 @@ export class ReportsRepository {
 
   public getCogsSummary(dateClause: DateFilterClause) {
     const sql = `
-      SELECT COALESCE(SUM(COALESCE(NULLIF(si.cost_price, 0), pv.cost_price, p.cost_price, 0) * si.quantity), 0) as total_cogs
+      SELECT COALESCE(SUM(COALESCE(NULLIF(si.cost_price, 0), pv.purchase_price, p.purchase_price, 0) * si.quantity), 0) as total_cogs
       FROM sale_items si
       JOIN sales s ON si.sale_id = s.id
       LEFT JOIN product_variants pv ON si.variant_id = pv.id

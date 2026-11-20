@@ -459,11 +459,19 @@ export function initDatabase(): void {
       } catch {}
     }
 
-    // Ensure customers table has outstanding_balance and due_date columns
+    // Ensure schema columns exist for customer credit, expiry tracking, and cost price
     try {
       db.exec(`
         ALTER TABLE customers ADD COLUMN IF NOT EXISTS outstanding_balance DOUBLE PRECISION DEFAULT 0.0;
         ALTER TABLE customers ADD COLUMN IF NOT EXISTS due_date TEXT;
+        ALTER TABLE inventory ADD COLUMN IF NOT EXISTS expiry_date DATE;
+        ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS expiry_date DATE;
+        ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS cost_price NUMERIC(10, 2);
+        ALTER TABLE products ADD COLUMN IF NOT EXISTS cost_price NUMERIC(10, 2);
+      `);
+      db.exec(`
+        UPDATE product_variants SET cost_price = purchase_price WHERE cost_price IS NULL AND purchase_price IS NOT NULL;
+        UPDATE products SET cost_price = purchase_price WHERE cost_price IS NULL AND purchase_price IS NOT NULL;
       `);
     } catch {}
   } catch (error) {

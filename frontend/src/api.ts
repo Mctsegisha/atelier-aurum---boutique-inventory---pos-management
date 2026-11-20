@@ -78,6 +78,21 @@ export function emitToast(type: 'success' | 'error' | 'warning' | 'info', messag
   }
 }
 
+/**
+ * Robust query string builder that filters out undefined, null, empty strings, and 'undefined'/'null' literal strings
+ */
+function buildQueryString(params?: Record<string, any>): string {
+  if (!params) return '';
+  const searchParams = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== null && value !== '' && value !== 'undefined' && value !== 'null') {
+      searchParams.append(key, String(value));
+    }
+  }
+  const str = searchParams.toString();
+  return str ? `?${str}` : '';
+}
+
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   // Normalize full URL
   const url = endpoint.startsWith('http://') || endpoint.startsWith('https://')
@@ -172,8 +187,7 @@ export const api = {
 
   // Products
   getProducts: (params?: { category?: string; subcategory?: string; search?: string; brand?: string; status?: string }) => {
-    const query = new URLSearchParams(params as Record<string, string>).toString();
-    return request<Product[]>(`/api/products${query ? `?${query}` : ''}`);
+    return request<Product[]>(`/api/products${buildQueryString(params)}`);
   },
 
   autocompleteProducts: (query: string) => {
@@ -221,8 +235,7 @@ export const api = {
     request<{ message: string }>(`/api/products/categories/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
 
   getSubcategories: (params?: { category_id?: string }) => {
-    const query = new URLSearchParams(params as Record<string, string>).toString();
-    return request<Subcategory[]>(`/api/products/subcategories/all${query ? `?${query}` : ''}`);
+    return request<Subcategory[]>(`/api/products/subcategories/all${buildQueryString(params)}`);
   },
   createSubcategory: (data: { category_id: string; name: string; description?: string }) =>
     request<Subcategory>('/api/products/subcategories', { method: 'POST', body: JSON.stringify(data) }),
@@ -237,8 +250,7 @@ export const api = {
 
   // Inventory
   getInventory: (params?: { lowStockOnly?: boolean; search?: string; categoryId?: string; status?: string; grouped?: boolean }) => {
-    const query = new URLSearchParams(params as any).toString();
-    return request<ParentInventoryProduct[]>(`/api/inventory${query ? `?${query}` : ''}`);
+    return request<ParentInventoryProduct[]>(`/api/inventory${buildQueryString(params)}`);
   },
 
   getInventoryStats: () => request<InventoryStats>('/api/inventory/stats'),
@@ -255,8 +267,7 @@ export const api = {
     request<any>('/api/inventory/receive', { method: 'POST', body: JSON.stringify(data) }),
 
   getInventoryMovements: (params?: { variant_id?: string; type?: string; limit?: number }) => {
-    const query = new URLSearchParams(params as any).toString();
-    return request<InventoryMovement[]>(`/api/inventory/movements${query ? `?${query}` : ''}`);
+    return request<InventoryMovement[]>(`/api/inventory/movements${buildQueryString(params)}`);
   },
 
   // POS
@@ -275,8 +286,7 @@ export const api = {
 
   // Sales
   getSales: (params?: { startDate?: string; endDate?: string; cashierId?: string; paymentMethod?: string; status?: string; search?: string; limit?: number }) => {
-    const query = new URLSearchParams(params as any).toString();
-    return request<Sale[]>(`/api/sales${query ? `?${query}` : ''}`);
+    return request<Sale[]>(`/api/sales${buildQueryString(params)}`);
   },
 
   getSaleDetails: (id: string) =>
@@ -287,8 +297,7 @@ export const api = {
 
   // Customers
   getCustomers: (params?: { search?: string }) => {
-    const query = new URLSearchParams(params as any).toString();
-    return request<Customer[]>(`/api/customers${query ? `?${query}` : ''}`);
+    return request<Customer[]>(`/api/customers${buildQueryString(params)}`);
   },
 
   getCustomerDetails: (id: string) =>
@@ -313,8 +322,7 @@ export const api = {
 
   // Expenses
   getExpenses: (params?: { categoryId?: string; startDate?: string; endDate?: string }) => {
-    const query = new URLSearchParams(params as any).toString();
-    return request<Expense[]>(`/api/expenses${query ? `?${query}` : ''}`);
+    return request<Expense[]>(`/api/expenses${buildQueryString(params)}`);
   },
   getExpenseCategories: () => request<any[]>('/api/expense-categories'),
   createExpenseCategory: (data: { name: string; description?: string }) =>
@@ -334,8 +342,7 @@ export const api = {
 
   // Reports
   getDashboardReports: (period = '30d', startDate?: string, endDate?: string) => {
-    const query = new URLSearchParams({ period, ...(startDate ? { startDate } : {}), ...(endDate ? { endDate } : {}) }).toString();
-    return request<any>(`/api/reports/dashboard?${query}`);
+    return request<any>(`/api/reports/dashboard${buildQueryString({ period, startDate, endDate })}`);
   },
 
   // Users (Admin only)
@@ -374,18 +381,15 @@ export const api = {
 
   // Reports Module V2
   getSalesReport: (params?: { period?: string; groupBy?: string; startDate?: string; endDate?: string }) => {
-    const query = new URLSearchParams(params as any).toString();
-    return request<SalesReportResponse>(`/api/reports/sales${query ? `?${query}` : ''}`);
+    return request<SalesReportResponse>(`/api/reports/sales${buildQueryString(params)}`);
   },
   getPnlReport: (params?: { period?: string; startDate?: string; endDate?: string }) => {
-    const query = new URLSearchParams(params as any).toString();
-    return request<PnlReportResponse>(`/api/reports/pnl${query ? `?${query}` : ''}`);
+    return request<PnlReportResponse>(`/api/reports/pnl${buildQueryString(params)}`);
   },
   getStockValueReport: () =>
     request<StockValueReportResponse>('/api/reports/stock-value'),
   getChannelsReport: (params?: { period?: string; startDate?: string; endDate?: string }) => {
-    const query = new URLSearchParams(params as any).toString();
-    return request<ChannelsReportResponse>(`/api/reports/channels${query ? `?${query}` : ''}`);
+    return request<ChannelsReportResponse>(`/api/reports/channels${buildQueryString(params)}`);
   },
   getOwedToUsReport: () =>
     request<OwedToUsReportResponse>('/api/reports/owed-to-us'),
@@ -395,14 +399,12 @@ export const api = {
       body: JSON.stringify(data)
     }),
   getWastageReport: (params?: { atRiskDays?: number }) => {
-    const query = new URLSearchParams(params as any).toString();
-    return request<WastageReportResponse>(`/api/reports/wastage${query ? `?${query}` : ''}`);
+    return request<WastageReportResponse>(`/api/reports/wastage${buildQueryString(params)}`);
   },
 
   // Audit & Notifications
   getAuditLogs: (params?: { action?: string; entityType?: string; limit?: number }) => {
-    const query = new URLSearchParams(params as any).toString();
-    return request<AuditLog[]>(`/api/audit/logs${query ? `?${query}` : ''}`);
+    return request<AuditLog[]>(`/api/audit/logs${buildQueryString(params)}`);
   },
   getNotifications: () => request<Notification[]>('/api/audit/notifications'),
   markNotificationRead: (id: string) => request<any>(`/api/audit/notifications/${id}/read`, { method: 'PATCH' }),

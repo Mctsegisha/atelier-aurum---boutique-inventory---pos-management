@@ -30,6 +30,26 @@ describe('Dashboard Query Schema & Validation', () => {
     assert.equal(parsed.data.endDate, '2026-11-15');
   });
 
+  it('should preprocess undefined, null, or empty string date values to undefined without failing', () => {
+    const parsedUndefined = dashboardQuerySchema.query.safeParse({
+      period: '30d',
+      startDate: 'undefined',
+      endDate: 'undefined'
+    });
+    assert.ok(parsedUndefined.success);
+    assert.equal(parsedUndefined.data.startDate, undefined);
+    assert.equal(parsedUndefined.data.endDate, undefined);
+
+    const parsedEmpty = dashboardQuerySchema.query.safeParse({
+      period: '7d',
+      startDate: '',
+      endDate: ''
+    });
+    assert.ok(parsedEmpty.success);
+    assert.equal(parsedEmpty.data.startDate, undefined);
+    assert.equal(parsedEmpty.data.endDate, undefined);
+  });
+
   it('should reject malformed date strings', () => {
     const parsed = dashboardQuerySchema.query.safeParse({
       period: 'custom',

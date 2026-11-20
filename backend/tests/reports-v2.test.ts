@@ -20,11 +20,28 @@ describe('Reports V2 Validation Schemas', () => {
     const defaultParsed = salesReportQuerySchema.query.parse({});
     assert.equal(defaultParsed.period, '30d');
     assert.equal(defaultParsed.groupBy, 'day');
+
+    const sanitizedParsed = salesReportQuerySchema.query.parse({
+      period: '30d',
+      groupBy: 'day',
+      startDate: 'undefined',
+      endDate: 'undefined'
+    });
+    assert.equal(sanitizedParsed.startDate, undefined);
+    assert.equal(sanitizedParsed.endDate, undefined);
   });
 
   it('should validate pnl report query params', () => {
     const parsed = pnlReportQuerySchema.query.parse({ period: 'month' });
     assert.equal(parsed.period, 'month');
+
+    const sanitized = pnlReportQuerySchema.query.parse({
+      period: 'month',
+      startDate: '',
+      endDate: 'undefined'
+    });
+    assert.equal(sanitized.startDate, undefined);
+    assert.equal(sanitized.endDate, undefined);
   });
 
   it('should validate settle credit input payload', () => {

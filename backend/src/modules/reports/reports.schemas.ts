@@ -1,10 +1,15 @@
 import { z } from 'zod';
 
+const optionalDate = z.preprocess(
+  (val) => (val === 'undefined' || val === 'null' || val === '' || val === null ? undefined : val),
+  z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD').optional()
+);
+
 export const dashboardQuerySchema = {
   query: z.object({
     period: z.enum(['day', 'week', 'month', 'today', 'yesterday', '7d', '30d', 'custom']).default('day'),
-    startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'startDate must be YYYY-MM-DD').optional(),
-    endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'endDate must be YYYY-MM-DD').optional()
+    startDate: optionalDate,
+    endDate: optionalDate
   })
 };
 
@@ -12,24 +17,24 @@ export const salesReportQuerySchema = {
   query: z.object({
     period: z.enum(['day', 'week', 'month', 'today', 'yesterday', '7d', '30d', 'custom']).default('30d'),
     groupBy: z.enum(['day', 'week', 'month']).default('day'),
-    startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'startDate must be YYYY-MM-DD').optional(),
-    endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'endDate must be YYYY-MM-DD').optional()
+    startDate: optionalDate,
+    endDate: optionalDate
   })
 };
 
 export const pnlReportQuerySchema = {
   query: z.object({
     period: z.enum(['day', 'week', 'month', 'today', 'yesterday', '7d', '30d', 'custom']).default('30d'),
-    startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'startDate must be YYYY-MM-DD').optional(),
-    endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'endDate must be YYYY-MM-DD').optional()
+    startDate: optionalDate,
+    endDate: optionalDate
   })
 };
 
 export const channelsReportQuerySchema = {
   query: z.object({
     period: z.enum(['day', 'week', 'month', 'today', 'yesterday', '7d', '30d', 'custom']).default('30d'),
-    startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'startDate must be YYYY-MM-DD').optional(),
-    endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'endDate must be YYYY-MM-DD').optional()
+    startDate: optionalDate,
+    endDate: optionalDate
   })
 };
 
