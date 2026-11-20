@@ -1,4 +1,30 @@
-import { User, Product, Category, Subcategory, Brand, InventoryItem, InventoryMovement, Customer, Sale, Supplier, PurchaseOrder, Expense, BusinessSettings, Notification, AuditLog, ParentInventoryProduct, InventoryStats, SlowMovingInventoryItem, CashSession } from './types.ts';
+import {
+  User,
+  Product,
+  Category,
+  Subcategory,
+  Brand,
+  InventoryItem,
+  InventoryMovement,
+  Customer,
+  Sale,
+  Supplier,
+  PurchaseOrder,
+  Expense,
+  BusinessSettings,
+  Notification,
+  AuditLog,
+  ParentInventoryProduct,
+  InventoryStats,
+  SlowMovingInventoryItem,
+  CashSession,
+  SalesReportResponse,
+  PnlReportResponse,
+  StockValueReportResponse,
+  ChannelsReportResponse,
+  OwedToUsReportResponse,
+  WastageReportResponse
+} from './types.ts';
 
 const TOKEN_KEY = 'aurum_jwt_token';
 
@@ -345,6 +371,33 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(data)
     }),
+
+  // Reports Module V2
+  getSalesReport: (params?: { period?: string; groupBy?: string; startDate?: string; endDate?: string }) => {
+    const query = new URLSearchParams(params as any).toString();
+    return request<SalesReportResponse>(`/api/reports/sales${query ? `?${query}` : ''}`);
+  },
+  getPnlReport: (params?: { period?: string; startDate?: string; endDate?: string }) => {
+    const query = new URLSearchParams(params as any).toString();
+    return request<PnlReportResponse>(`/api/reports/pnl${query ? `?${query}` : ''}`);
+  },
+  getStockValueReport: () =>
+    request<StockValueReportResponse>('/api/reports/stock-value'),
+  getChannelsReport: (params?: { period?: string; startDate?: string; endDate?: string }) => {
+    const query = new URLSearchParams(params as any).toString();
+    return request<ChannelsReportResponse>(`/api/reports/channels${query ? `?${query}` : ''}`);
+  },
+  getOwedToUsReport: () =>
+    request<OwedToUsReportResponse>('/api/reports/owed-to-us'),
+  settleCustomerCredit: (data: { customer_id: string; amount: number; payment_method?: string; notes?: string }) =>
+    request<{ success: boolean; customer: any }>('/api/reports/settle-credit', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    }),
+  getWastageReport: (params?: { atRiskDays?: number }) => {
+    const query = new URLSearchParams(params as any).toString();
+    return request<WastageReportResponse>(`/api/reports/wastage${query ? `?${query}` : ''}`);
+  },
 
   // Audit & Notifications
   getAuditLogs: (params?: { action?: string; entityType?: string; limit?: number }) => {
