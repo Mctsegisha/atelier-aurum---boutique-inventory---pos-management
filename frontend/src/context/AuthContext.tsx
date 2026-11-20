@@ -6,7 +6,7 @@ interface AuthContextType {
   user: User | null;
   role: Role | null;
   isLoading: boolean;
-  login: (credential: string, password: string) => Promise<void>;
+  login: (credential: string, password: string, rememberMe?: boolean) => Promise<void>;
   quickSwitch: (role: Role) => Promise<void>;
   logout: () => void;
   hasPermission: (key: string) => boolean;
@@ -42,11 +42,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loadUser();
   }, []);
 
-  const login = async (credential: string, password: string) => {
+  const login = async (credential: string, password: string, rememberMe = true) => {
     setIsLoading(true);
     try {
-      const res = await api.login(credential, password);
-      setStoredToken(res.token);
+      const res = await api.login(credential, password, rememberMe);
+      setStoredToken(res.token, rememberMe);
       setUser(res.user);
     } finally {
       setIsLoading(false);

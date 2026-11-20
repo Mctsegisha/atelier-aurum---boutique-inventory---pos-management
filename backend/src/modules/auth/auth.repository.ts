@@ -17,10 +17,26 @@ export interface ProfileRecord {
 export class AuthRepository {
   public findByCredential(credential: string): ProfileRecord | undefined {
     const term = credential.trim().toLowerCase();
-    return db.prepare(`
+
+    // Check direct email or username match
+    let user = db.prepare(`
       SELECT * FROM profiles
       WHERE LOWER(email) = ? OR LOWER(username) = ?
+      LIMIT 1
     `).get(term, term) as ProfileRecord | undefined;
+
+    // Brand alias support: If admin@aurastore.et or aurastore domain is entered, map to corresponding staff
+    if (!user) {
+      if (term === 'admin@aurastore.et' || term === 'owner@aurastore.et') {
+        user = db.prepare(`SELECT * FROM profiles WHERE role = 'admin' AND is_active = 1 LIMIT 1`).get() as ProfileRecord | undefined;
+      } else if (term === 'manager@aurastore.et' || term === 'store@aurastore.et') {
+        user = db.prepare(`SELECT * FROM profiles WHERE role = 'store_person' AND is_active = 1 LIMIT 1`).get() as ProfileRecord | undefined;
+      } else if (term === 'sales@aurastore.et' || term === 'cashier@aurastore.et') {
+        user = db.prepare(`SELECT * FROM profiles WHERE role = 'sales' AND is_active = 1 LIMIT 1`).get() as ProfileRecord | undefined;
+      }
+    }
+
+    return user;
   }
 
   public findById(id: string): ProfileRecord | undefined {

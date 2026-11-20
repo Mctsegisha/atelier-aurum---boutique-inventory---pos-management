@@ -41,5 +41,16 @@ describe('Auth Service & Cryptographic Token Verification', () => {
   it('should reject malformed token strings', () => {
     assert.throws(() => verifyToken('invalid-token-string'), /Malformed token structure/);
   });
+
+  it('should support custom token expiration for persistent session (Keep Me Signed In)', () => {
+    const shortToken = generateToken(dummyUser, 3600); // 1 hour
+    const longToken = generateToken(dummyUser, 30 * 24 * 3600); // 30 days
+
+    const decodedShort = verifyToken(shortToken) as any;
+    const decodedLong = verifyToken(longToken) as any;
+
+    assert.ok(decodedLong.exp > decodedShort.exp, 'Persistent token exp must be further in the future');
+    assert.ok(decodedLong.exp - decodedShort.exp > 25 * 24 * 3600, 'Difference reflects extended 30-day session');
+  });
 });
 

@@ -20,7 +20,7 @@ export interface AuthenticatedRequest extends Request {
   user?: AuthUser;
 }
 
-export function generateToken(user: { id: string; email: string; role: string; username: string }): string {
+export function generateToken(user: { id: string; email: string; role: string; username: string }, expiresInSeconds?: number): string {
   const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
   const payload = Buffer.from(
     JSON.stringify({
@@ -28,7 +28,7 @@ export function generateToken(user: { id: string; email: string; role: string; u
       email: user.email,
       role: user.role,
       username: user.username,
-      exp: Math.floor(Date.now() / 1000) + env.JWT_EXPIRES_IN_SECONDS
+      exp: Math.floor(Date.now() / 1000) + (expiresInSeconds || env.JWT_EXPIRES_IN_SECONDS)
     })
   ).toString('base64url');
 

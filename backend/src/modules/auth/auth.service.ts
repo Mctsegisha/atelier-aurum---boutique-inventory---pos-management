@@ -8,7 +8,7 @@ import { env } from '../../config/env.js';
 export class AuthService {
   constructor(private readonly repo: AuthRepository = authRepository) {}
 
-  public async login(credential: string, passwordPlain: string, ipAddress = '127.0.0.1') {
+  public async login(credential: string, passwordPlain: string, rememberMe = true, ipAddress = '127.0.0.1') {
     const user = this.repo.findByCredential(credential);
     if (!user) {
       throw new UnauthorizedError('Invalid login credentials.');
@@ -25,8 +25,10 @@ export class AuthService {
       throw new UnauthorizedError('Invalid login credentials.');
     }
 
-    const token = generateToken(user);
-    auditService.log(user.id, 'LOGIN_SUCCESS', 'AUTH', user.id, { role: user.role }, undefined, ipAddress);
+    // Persistent login gets 30 days expiry; session login gets standard/1-day expiry
+    const tokenLifetime = rememberMe ? 30 * 24 * 3600 : env.JWT_EXPIRES_IN_SECONDS;
+    const token = generateToken(user, tokenLifetime);
+    auditService.log(user.id, 'LOGIN_SUCCESS', 'AUTH', user.id, { role: user.role, rememberMe }, undefined, ipAddress);
 
     return {
       token,

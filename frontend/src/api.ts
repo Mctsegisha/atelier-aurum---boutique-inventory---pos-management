@@ -49,15 +49,25 @@ export class ApiError extends Error {
 }
 
 export function getStoredToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY);
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY);
 }
 
-export function setStoredToken(token: string) {
-  localStorage.setItem(TOKEN_KEY, token);
+export function setStoredToken(token: string, persist = true) {
+  if (typeof window === 'undefined') return;
+  if (persist) {
+    localStorage.setItem(TOKEN_KEY, token);
+    sessionStorage.removeItem(TOKEN_KEY);
+  } else {
+    sessionStorage.setItem(TOKEN_KEY, token);
+    localStorage.removeItem(TOKEN_KEY);
+  }
 }
 
 export function clearStoredToken() {
+  if (typeof window === 'undefined') return;
   localStorage.removeItem(TOKEN_KEY);
+  sessionStorage.removeItem(TOKEN_KEY);
 }
 
 /**
@@ -165,10 +175,10 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
 export const api = {
   // Auth
-  login: (credential: string, password: string) =>
+  login: (credential: string, password: string, rememberMe = true) =>
     request<{ token: string; user: User }>('/api/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ credential, password })
+      body: JSON.stringify({ credential, password, rememberMe })
     }),
 
   quickSwitch: (targetRole: 'admin' | 'store_person' | 'sales') =>

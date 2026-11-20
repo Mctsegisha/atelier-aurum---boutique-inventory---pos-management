@@ -7,9 +7,9 @@ export class AuthController {
 
   public login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { credential, password } = req.body;
+      const { credential, password, rememberMe } = req.body;
       const ip = req.ip || req.socket.remoteAddress || '127.0.0.1';
-      const result = await this.service.login(credential, password, ip);
+      const result = await this.service.login(credential, password, rememberMe, ip);
       res.json(result);
     } catch (err) {
       next(err);
