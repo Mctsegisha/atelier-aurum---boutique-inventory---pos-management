@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext.tsx';
 import { api } from '../api.ts';
 import { Product, Category, Subcategory, Brand, Supplier, Variant } from '../types.ts';
 import { formatCurrency } from '../lib/currency.ts';
+import { SkeletonTableRows } from '../components/common/SkeletonLoader.tsx';
 import {
   BOUTIQUE_CATEGORIES_CONFIG,
   VARIANT_TEMPLATES,
@@ -650,7 +651,7 @@ export function ProductsView() {
   };
 
   return (
-    <div className="p-5 space-y-5">
+    <div className="p-6 space-y-6">
       {/* View Header & Action Bar */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-[#E5E0D8] pb-6">
         <div>

@@ -9,6 +9,7 @@ import {
   SlowMovingInventoryItem,
   Category
 } from '../types.ts';
+import { SkeletonTableRows } from '../components/common/SkeletonLoader.tsx';
 import {
   Search,
   AlertTriangle,
@@ -434,7 +435,7 @@ export function InventoryView() {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6 font-sans">
+    <div className="p-6 lg:p-8 w-full space-y-6 font-sans">
       {/* Toast Notification */}
       {successMsg && (
         <div className="fixed top-5 right-5 z-50 bg-[#1E3A34] text-white px-4 py-3 rounded-xl shadow-lg border border-emerald-500/30 flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
@@ -692,14 +693,7 @@ export function InventoryView() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {isLoading ? (
-                    <tr>
-                      <td colSpan={9} className="py-16 text-center text-gray-500">
-                        <div className="inline-flex items-center gap-2 text-xs">
-                          <RefreshCw className="w-4 h-4 animate-spin text-gray-400" />
-                          <span>Verifying inventory and batches across catalog...</span>
-                        </div>
-                      </td>
-                    </tr>
+                    <SkeletonTableRows cols={9} rows={8} />
                   ) : filteredItems.length === 0 ? (
                     <tr>
                       <td colSpan={9} className="py-16 text-center text-gray-500">
@@ -1004,12 +998,7 @@ export function InventoryView() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {isLoadingMovements ? (
-                    <tr>
-                      <td colSpan={9} className="py-16 text-center text-gray-500">
-                        <RefreshCw className="w-4 h-4 animate-spin text-gray-400 mx-auto mb-1" />
-                        <span>Loading immutable movement audit trail...</span>
-                      </td>
-                    </tr>
+                    <SkeletonTableRows cols={9} rows={6} />
                   ) : filteredMovements.length === 0 ? (
                     <tr>
                       <td colSpan={9} className="py-16 text-center text-gray-500">
@@ -1095,12 +1084,7 @@ export function InventoryView() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {isLoadingSlowMoving ? (
-                    <tr>
-                      <td colSpan={7} className="py-16 text-center text-gray-500">
-                        <RefreshCw className="w-4 h-4 animate-spin text-gray-400 mx-auto mb-1" />
-                        <span>Querying 30-day velocity and inventory turnover...</span>
-                      </td>
-                    </tr>
+                    <SkeletonTableRows cols={7} rows={5} />
                   ) : slowMovingItems.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="py-16 text-center text-gray-500">

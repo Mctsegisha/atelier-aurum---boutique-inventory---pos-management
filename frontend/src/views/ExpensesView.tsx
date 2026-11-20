@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext.tsx';
 import { api } from '../api.ts';
 import { Expense } from '../types.ts';
 import { formatCurrency } from '../lib/currency.ts';
+import { SkeletonTableRows } from '../components/common/SkeletonLoader.tsx';
 import {
   Plus,
   Calendar,
@@ -165,7 +166,7 @@ export function ExpensesView() {
   const totalExpenseAmount = expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6 font-sans">
+    <div className="p-6 lg:p-8 w-full space-y-6 font-sans">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-5 border-b border-gray-200">
         <div>
@@ -262,14 +263,7 @@ export function ExpensesView() {
             </thead>
             <tbody className="divide-y divide-gray-100 font-sans">
               {isLoading ? (
-                <tr>
-                  <td colSpan={7} className="py-12 text-center text-gray-400 font-sans">
-                    <div className="flex flex-col items-center justify-center space-y-2">
-                      <RefreshCw className="w-5 h-5 animate-spin text-gray-300" />
-                      <span>Loading expense records...</span>
-                    </div>
-                  </td>
-                </tr>
+                <SkeletonTableRows cols={role === 'admin' ? 7 : 6} rows={5} />
               ) : expenses.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-gray-400 font-sans">

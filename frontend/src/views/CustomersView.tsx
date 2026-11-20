@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../api.ts';
 import { Customer } from '../types.ts';
 import { formatCurrency } from '../lib/currency.ts';
+import { SkeletonCustomerCards } from '../components/common/SkeletonLoader.tsx';
 import {
   Users,
   Search,
@@ -100,7 +101,7 @@ export function CustomersView() {
   );
 
   return (
-    <div className="p-5 space-y-5">
+    <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-[#E5E0D8]">
         <div>
@@ -137,9 +138,7 @@ export function CustomersView() {
       {/* Customers Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {isLoading ? (
-          <div className="col-span-3 text-center py-12 text-xs text-[#716D66]">
-            Loading VIP directory...
-          </div>
+          <SkeletonCustomerCards cards={6} />
         ) : filtered.length === 0 ? (
           <div className="col-span-3 text-center py-12 text-xs text-[#716D66]">
             No client records found.

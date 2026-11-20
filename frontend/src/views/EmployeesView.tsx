@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.tsx';
 import { api } from '../api.ts';
 import { User, Role } from '../types.ts';
+import { SkeletonTableRows } from '../components/common/SkeletonLoader.tsx';
 import {
   UserCheck,
   Plus,
@@ -98,7 +99,7 @@ export function EmployeesView() {
   };
 
   return (
-    <div className="p-5 space-y-5">
+    <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-[#E5E0D8]">
         <div>
@@ -136,11 +137,7 @@ export function EmployeesView() {
             </thead>
             <tbody className="divide-y divide-[#F0EDE8]">
               {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-[#716D66]">
-                    Loading staff directory...
-                  </td>
-                </tr>
+                <SkeletonTableRows cols={6} rows={4} />
               ) : (
                 users.map(u => (
                   <tr key={u.id} className="hover:bg-[#F9F8F6]/60 transition-colors">

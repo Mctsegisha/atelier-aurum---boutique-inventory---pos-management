@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api.ts';
 import { AuditLog } from '../types.ts';
+import { SkeletonTableRows } from '../components/common/SkeletonLoader.tsx';
 import {
   History,
   Search,
@@ -39,7 +40,7 @@ export function AuditLogsView() {
   );
 
   return (
-    <div className="p-5 space-y-5">
+    <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-[#E5E0D8]">
         <div>
@@ -97,11 +98,7 @@ export function AuditLogsView() {
             </thead>
             <tbody className="divide-y divide-[#F0EDE8]">
               {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-[#716D66]">
-                    Retrieving security audit log...
-                  </td>
-                </tr>
+                <SkeletonTableRows cols={6} rows={6} />
               ) : filtered.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-[#716D66]">

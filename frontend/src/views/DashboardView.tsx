@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.tsx';
 import { api } from '../api.ts';
 import { formatCurrency } from '../lib/currency.ts';
+import { SkeletonDashboard } from '../components/common/SkeletonLoader.tsx';
 import {
   TrendingUp,
   Package,
@@ -114,11 +115,8 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
 
   if (isLoading && !data) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh] text-[#716D66] text-xs">
-        <div className="text-center space-y-2">
-          <div className="w-8 h-8 border-2 border-[#B89B65] border-t-transparent rounded-full animate-spin mx-auto" />
-          <p>Compiling boutique analytics...</p>
-        </div>
+      <div className="p-6 space-y-6">
+        <SkeletonDashboard />
       </div>
     );
   }
@@ -127,7 +125,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
   const charts = data?.charts || {};
 
   return (
-    <div className="p-5 space-y-5">
+    <div className="p-6 space-y-6">
       {/* Header with Luxury Serif Display & Period Tabs */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-[#E5E0D8]">
         <div>

@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext.tsx';
 import { api } from '../api.ts';
 import { Sale } from '../types.ts';
 import { formatCurrency } from '../lib/currency.ts';
+import { SkeletonTableRows } from '../components/common/SkeletonLoader.tsx';
 import {
   Receipt,
   Search,
@@ -111,7 +112,7 @@ export function SalesView() {
   const totalRevenue = sales.reduce((sum, s) => sum + s.total_amount, 0);
 
   return (
-    <div className="p-5 space-y-5">
+    <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-6 border-b border-[#E5E0D8]">
         <div>
@@ -191,11 +192,7 @@ export function SalesView() {
             </thead>
             <tbody className="divide-y divide-[#F0EDE8]">
               {isLoading ? (
-                <tr>
-                  <td colSpan={9} className="py-12 text-center text-[#716D66]">
-                    Loading sales records...
-                  </td>
-                </tr>
+                <SkeletonTableRows cols={9} rows={6} />
               ) : filteredSales.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="py-12 text-center text-[#716D66]">

@@ -826,30 +826,30 @@ export function ReportsView() {
             <div className="space-y-6">
               {/* Top 4 KPI Cards */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="p-4 rounded-xl border border-gray-200 bg-white shadow-2xs">
-                  <span className="text-xs text-gray-500 font-sans block leading-tight">Cost of stock on hand</span>
-                  <span className="text-lg font-bold text-gray-900 font-mono tabular-nums leading-tight mt-1.5 block">
+                <div className="p-5 rounded-xl border border-gray-200/80 bg-white shadow-2xs">
+                  <span className="text-xs text-gray-500 font-sans block leading-tight font-medium">Cost of stock on hand</span>
+                  <span className="text-2xl font-bold text-gray-900 font-mono tabular-nums leading-tight mt-2 block tracking-tight">
                     {formatCurrency(stockReport.cost_of_stock_on_hand)}
                   </span>
                 </div>
 
-                <div className="p-4 rounded-xl border border-gray-200 bg-white shadow-2xs">
-                  <span className="text-xs text-gray-500 font-sans block leading-tight">Value at retail</span>
-                  <span className="text-lg font-bold text-gray-900 font-mono tabular-nums leading-tight mt-1.5 block">
+                <div className="p-5 rounded-xl border border-gray-200/80 bg-white shadow-2xs">
+                  <span className="text-xs text-gray-500 font-sans block leading-tight font-medium">Value at retail</span>
+                  <span className="text-2xl font-bold text-gray-900 font-mono tabular-nums leading-tight mt-2 block tracking-tight">
                     {formatCurrency(stockReport.value_at_retail)}
                   </span>
                 </div>
 
-                <div className="p-4 rounded-xl border border-gray-200 bg-white shadow-2xs">
-                  <span className="text-xs text-gray-500 font-sans block leading-tight">Markup if it all sells</span>
-                  <span className="text-lg font-bold text-gray-900 font-mono tabular-nums leading-tight mt-1.5 block">
+                <div className="p-5 rounded-xl border border-gray-200/80 bg-white shadow-2xs">
+                  <span className="text-xs text-gray-500 font-sans block leading-tight font-medium">Markup if it all sells</span>
+                  <span className="text-2xl font-bold text-gray-900 font-mono tabular-nums leading-tight mt-2 block tracking-tight">
                     {formatCurrency(stockReport.markup_if_all_sells)}
                   </span>
                 </div>
 
-                <div className="p-4 rounded-xl border border-gray-200 bg-white shadow-2xs">
-                  <span className="text-xs text-gray-500 font-sans block leading-tight">Markup on cost</span>
-                  <span className="text-lg font-bold text-gray-900 font-mono tabular-nums leading-tight mt-1.5 block">
+                <div className="p-5 rounded-xl border border-gray-200/80 bg-white shadow-2xs">
+                  <span className="text-xs text-gray-500 font-sans block leading-tight font-medium">Markup on cost</span>
+                  <span className="text-2xl font-bold text-gray-900 font-mono tabular-nums leading-tight mt-2 block tracking-tight">
                     {stockReport.markup_on_cost_percent.toFixed(1)}%
                   </span>
                 </div>
@@ -1024,29 +1024,29 @@ export function ReportsView() {
 
               {/* Top 3 Metric Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 rounded-xl border border-gray-200 bg-white shadow-2xs">
-                  <span className="text-xs text-gray-500 font-sans block leading-tight">
+                <div className="p-5 rounded-xl border border-gray-200/80 bg-white shadow-2xs">
+                  <span className="text-xs text-gray-500 font-sans block leading-tight font-medium">
                     At risk — sell within {atRiskDays} days
                   </span>
-                  <span className="text-lg font-bold text-gray-900 font-mono tabular-nums leading-tight mt-1.5 block">
+                  <span className="text-2xl font-bold text-gray-900 font-mono tabular-nums leading-tight mt-2 block tracking-tight">
                     {formatCurrency(wastageReport.at_risk_value)}
                   </span>
                 </div>
 
-                <div className="p-4 rounded-xl border border-gray-200 bg-white shadow-2xs">
-                  <span className="text-xs text-gray-500 font-sans block leading-tight">
+                <div className="p-5 rounded-xl border border-gray-200/80 bg-white shadow-2xs">
+                  <span className="text-xs text-gray-500 font-sans block leading-tight font-medium">
                     Expired, not yet written off
                   </span>
-                  <span className="text-lg font-bold text-gray-900 font-mono tabular-nums leading-tight mt-1.5 block">
+                  <span className="text-2xl font-bold text-gray-900 font-mono tabular-nums leading-tight mt-2 block tracking-tight">
                     {formatCurrency(wastageReport.expired_not_written_off)}
                   </span>
                 </div>
 
-                <div className="p-4 rounded-xl border border-gray-200 bg-white shadow-2xs">
-                  <span className="text-xs text-gray-500 font-sans block leading-tight">
+                <div className="p-5 rounded-xl border border-gray-200/80 bg-white shadow-2xs">
+                  <span className="text-xs text-gray-500 font-sans block leading-tight font-medium">
                     Written off
                   </span>
-                  <span className="text-lg font-bold text-gray-900 font-mono tabular-nums leading-tight mt-1.5 block">
+                  <span className="text-2xl font-bold text-gray-900 font-mono tabular-nums leading-tight mt-2 block tracking-tight">
                     {formatCurrency(wastageReport.written_off)}
                   </span>
                 </div>

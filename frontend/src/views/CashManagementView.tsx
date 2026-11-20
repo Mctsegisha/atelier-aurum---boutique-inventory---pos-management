@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext.tsx';
 import { api } from '../api.ts';
 import { CashSession } from '../types.ts';
 import { formatCurrency } from '../lib/currency.ts';
+import { SkeletonBar, SkeletonTableRows } from '../components/common/SkeletonLoader.tsx';
 import {
   Wallet,
   Clock,
@@ -131,7 +132,7 @@ export function CashManagementView() {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6 font-sans">
+    <div className="p-6 lg:p-8 w-full space-y-6 font-sans">
       {/* 1. Page Header & Subtitle */}
       <div>
         <h1 className="text-xl font-bold text-gray-900 font-sans tracking-tight">Cash Management</h1>
@@ -177,9 +178,18 @@ export function CashManagementView() {
 
         {/* Card Body */}
         {isLoading ? (
-          <div className="py-12 flex flex-col items-center justify-center text-gray-400 text-xs space-y-2">
-            <RefreshCw className="w-5 h-5 animate-spin text-gray-300" />
-            <span>Loading cash session...</span>
+          <div className="p-5 space-y-4" aria-hidden="true">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="p-4 rounded-xl border border-gray-200/80 bg-white flex items-center gap-3.5">
+                  <SkeletonBar className="h-10 w-10 rounded-full shrink-0" />
+                  <div className="space-y-2 flex-1">
+                    <SkeletonBar className="h-2.5 w-20" />
+                    <SkeletonBar className="h-5 w-28" />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         ) : activeSession ? (
           /* STATE A: ACTIVE SESSION VIEW (Reference Image 1) */
@@ -319,11 +329,7 @@ export function CashManagementView() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {isLoading ? (
-                  <tr>
-                    <td colSpan={9} className="py-12 text-center text-gray-400 font-sans">
-                      Loading session history...
-                    </td>
-                  </tr>
+                  <SkeletonTableRows cols={9} rows={5} />
                 ) : history.length === 0 ? (
                   <tr>
                     <td colSpan={9} className="py-10 text-center text-gray-400 font-sans">
